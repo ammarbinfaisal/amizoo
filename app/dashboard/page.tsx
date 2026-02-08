@@ -12,6 +12,12 @@ import { Button } from "@/components/ui/button";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Separator } from "@/components/ui/separator";
 import { LogOut, Calendar, GraduationCap, BarChart3 } from "lucide-react";
+import { Metadata } from "next";
+
+export const metadata: Metadata = {
+  title: "Dashboard",
+  description: "Your Amizone academic overview.",
+};
 
 export default async function DashboardPage() {
   const credentials = await getAuthCredentials();
