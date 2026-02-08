@@ -1,0 +1,48 @@
+import { AttendanceRecords, Courses, Profile, ScheduledClasses, SemesterList } from "./types";
+import { z } from "zod";
+
+const API_URL = process.env.AMIZONE_API_URL || "http://localhost:8081";
+
+interface Credentials {
+  username: string;
+  password: string;
+}
+
+export async function fetchFromAmizone<T>(
+  endpoint: string,
+  credentials: Credentials,
+  schema?: z.ZodType<T>
+): Promise<T> {
+  const auth = btoa(`${credentials.username}:${credentials.password}`);
+  const response = await fetch(`${API_URL}${endpoint}`, {
+    headers: {
+      Authorization: `Basic ${auth}`,
+    },
+  });
+
+  if (!response.ok) {
+    if (response.status === 401) {
+      throw new Error("Invalid credentials");
+    }
+    throw new Error(`API error: ${response.statusText}`);
+  }
+
+  const data = await response.json();
+  
+  if (schema) {
+    return schema.parse(data);
+  }
+
+  return data;
+}
+
+export const amizoneApi = {
+  getAttendance: (creds: Credentials) => fetchFromAmizone<AttendanceRecords>("/api/v1/attendance", creds),
+  getProfile: (creds: Credentials) => fetchFromAmizone<Profile>("/api/v1/user_profile", creds),
+  getSemesters: (creds: Credentials) => fetchFromAmizone<SemesterList>("/api/v1/semesters", creds),
+  getCourses: (creds: Credentials) => fetchFromAmizone<Courses>("/api/v1/courses", creds),
+  getClassSchedule: (creds: Credentials, date: string) => {
+    const [year, month, day] = date.split("-");
+    return fetchFromAmizone<ScheduledClasses>(`/api/v1/class_schedule/${year}/${month}/${day}`, creds);
+  },
+};
