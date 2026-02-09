@@ -1,4 +1,4 @@
-import { AttendanceRecords, Courses, Profile, ScheduledClasses, SemesterList } from "./types";
+import { AttendanceRecords, Courses, ExamSchedule, Profile, ScheduledClasses, SemesterList, WifiInfo } from "./types";
 import { z } from "zod";
 
 const rawApiUrl = process.env.NEXT_PUBLIC_AMIZONE_API_URL || "https://api.ami.zoo.fullstacktics.com";
