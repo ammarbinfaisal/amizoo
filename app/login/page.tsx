@@ -43,24 +43,12 @@ export default function LoginPage() {
     setLoading(true);
 
     try {
-      const res = await fetch("/api/auth/login", {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify(values),
-      });
+      // Store credentials in localStorage for client-side API calls
+      localStorage.setItem("amizone_user", values.username);
+      localStorage.setItem("amizone_pass", values.password);
 
-      if (res.ok) {
-        // Store credentials in localStorage for client-side API calls
-        localStorage.setItem("amizone_user", values.username);
-        localStorage.setItem("amizone_pass", values.password);
-
-        toast.success("Login successful");
-        router.push("/dashboard");
-        router.refresh();
-      } else {
-        const data = await res.json();
-        toast.error(data.message || "Login failed");
-      }
+      toast.success("Login successful");
+      router.push("/dashboard");
     } catch {
       toast.error("An error occurred during login");
     } finally {
