@@ -222,7 +222,7 @@ export default function DashboardPage() {
           <TabsContent value="schedule" className="space-y-4">
             <div className="flex justify-between items-center">
               <h2 className="text-xl font-black uppercase tracking-tight">Today&apos;s Classes</h2>
-              <Badge variant="outline" className="font-bold border-secondary text-secondary-foreground bg-secondary/10">
+              <Badge variant="secondary" className="font-bold rounded-full px-4 py-1 text-[10px] uppercase tracking-widest">
                 {new Date().toLocaleDateString('en-US', { weekday: 'long', month: 'short', day: 'numeric' })}
               </Badge>
             </div>
@@ -314,7 +314,7 @@ export default function DashboardPage() {
 
       <footer className="container max-w-6xl mx-auto py-12 px-8 text-center text-muted-foreground">
         <p className="text-[10px] font-bold uppercase tracking-[0.2em] opacity-30">
-          Amizoo &bull; Crafted with Burlywood & Black
+          Amizoo &bull; 60/30/10 Beige & Burlywood
         </p>
       </footer>
     </div>

@@ -50,68 +50,68 @@
 :root {
   --radius: 0.375rem;
 
-  /* Monochrome Theme: White, Gray, Dark-Gray, Black */
-  --background: oklch(1 0 0);           /* Pure White */
+  /* Beige/Burlywood Theme: Beige (60), Burlywood (30), Black (10) */
+  --background: oklch(0.98 0.01 95);     /* Light Beige */
   --foreground: oklch(0.15 0 0);        /* Black */
 
-  --card: oklch(0.98 0 0);              /* Off-White */
+  --card: oklch(0.99 0.005 95);         /* Very Light Beige */
   --card-foreground: oklch(0.15 0 0);   /* Black */
-  --popover: oklch(0.98 0 0);           /* Off-White */
+  --popover: oklch(0.99 0.005 95);      /* Very Light Beige */
   --popover-foreground: oklch(0.15 0 0);/* Black */
 
-  --secondary: oklch(0.5 0 0);          /* Dark-Gray */
-  --secondary-foreground: oklch(1 0 0); /* White */
+  --secondary: oklch(0.82 0.08 75);     /* Burlywood */
+  --secondary-foreground: oklch(0.15 0 0); /* Black */
 
-  --muted: oklch(0.93 0 0);             /* Light Gray */
-  --muted-foreground: oklch(0.45 0 0);  /* Medium Gray */
+  --muted: oklch(0.94 0.02 90);         /* Soft Beige/Burlywood */
+  --muted-foreground: oklch(0.4 0.02 75); /* Dark Burlywood/Gray */
 
-  --border: oklch(0.88 0 0);            /* Gray */
-  --input: oklch(0.88 0 0);             /* Gray */
+  --border: oklch(0.88 0.03 85);        /* Burlywood-tinted gray */
+  --input: oklch(0.88 0.03 85);         /* Burlywood-tinted gray */
 
   --primary: oklch(0.15 0 0);           /* Black */
-  --primary-foreground: oklch(1 0 0);   /* White */
+  --primary-foreground: oklch(0.98 0.01 95); /* Beige */
 
-  --accent: oklch(0.7 0 0);             /* Light Gray for skeleton */
+  --accent: oklch(0.82 0.08 75);        /* Burlywood */
   --accent-foreground: oklch(0.15 0 0); /* Black */
 
   --ring: oklch(0.15 0 0);              /* Black */
 
-  --destructive: oklch(0.4 0 0);        /* Dark Gray for errors */
-  --chart-1: oklch(0.3 0 0);
-  --chart-2: oklch(0.4 0 0);
-  --chart-3: oklch(0.5 0 0);
-  --chart-4: oklch(0.6 0 0);
-  --chart-5: oklch(0.7 0 0);
+  --destructive: oklch(0.4 0.05 20);    /* Dark Reddish/Gray for errors */
+  --chart-1: oklch(0.15 0 0);
+  --chart-2: oklch(0.82 0.08 75);
+  --chart-3: oklch(0.4 0.05 20);
+  --chart-4: oklch(0.6 0.05 75);
+  --chart-5: oklch(0.7 0.05 85);
 }
 
 .dark {
   /* Monochrome Dark Theme: Black, Dark-Gray, Gray, White */
-  --background: oklch(0.15 0 0);        /* Black */
-  --foreground: oklch(1 0 0);           /* White */
+  --background: oklch(0.12 0 0);        /* Very Dark */
+  --foreground: oklch(0.98 0.01 95);     /* Beige Text */
 
-  --card: oklch(0.2 0 0);               /* Very Dark Gray */
-  --card-foreground: oklch(1 0 0);      /* White */
-  --popover: oklch(0.2 0 0);            /* Very Dark Gray */
-  --popover-foreground: oklch(1 0 0);   /* White */
+  --card: oklch(0.18 0.01 95);          /* Dark Gray-Beige */
+  --card-foreground: oklch(0.98 0.01 95);/* Beige */
+  --popover: oklch(0.18 0.01 95);       /* Dark Gray-Beige */
+  --popover-foreground: oklch(0.98 0.01 95);/* Beige */
 
-  --secondary: oklch(0.5 0 0);          /* Gray */
-  --secondary-foreground: oklch(0.15 0 0); /* Black */
+  --secondary: oklch(0.4 0.05 75);      /* Dimmed Burlywood */
+  --secondary-foreground: oklch(0.98 0.01 95); /* Beige */
 
-  --muted: oklch(0.25 0 0);             /* Dark Gray */
-  --muted-foreground: oklch(0.65 0 0);  /* Light Gray */
+  --muted: oklch(0.25 0.02 95);         /* Very Dark Beige */
+  --muted-foreground: oklch(0.7 0.02 95);  /* Light Beige-Gray */
 
-  --border: oklch(0.3 0 0);             /* Dark Gray */
-  --input: oklch(0.3 0 0);              /* Dark Gray */
+  --border: oklch(0.3 0.02 95);         /* Dark Beige Border */
+  --input: oklch(0.3 0.02 95);          /* Dark Beige Border */
 
-  --primary: oklch(1 0 0);              /* White */
+  --primary: oklch(0.98 0.01 95);       /* Beige */
   --primary-foreground: oklch(0.15 0 0);/* Black */
 
-  --accent: oklch(0.35 0 0);            /* Darker Gray for skeleton */
-  --accent-foreground: oklch(1 0 0);    /* White */
+  --accent: oklch(0.35 0.02 95);        /* Dark Beige Accent */
+  --accent-foreground: oklch(0.98 0.01 95); /* Beige */
 
-  --ring: oklch(1 0 0);                 /* White */
+  --ring: oklch(0.98 0.01 95);          /* Beige */
 
-  --destructive: oklch(0.7 0 0);        /* Light Gray for errors */
+  --destructive: oklch(0.7 0.05 20);    /* Light Reddish/Gray */
 }
 
 @layer base {
