@@ -1,4 +1,16 @@
-import { AttendanceRecords, Courses, ExamSchedule, Profile, ScheduledClasses, SemesterList, WifiInfo } from "./types";
+import {
+  AttendanceRecords,
+  Courses,
+  ExamResultRecords,
+  ExaminationSchedule,
+  FillFacultyFeedbackRequest,
+  FillFacultyFeedbackResponse,
+  Profile,
+  ScheduledClasses,
+  SemesterList,
+  WifiInfo,
+  WifiMacInfo,
+} from "./types";
 import { z } from "zod";
 
 const rawApiUrl = process.env.NEXT_PUBLIC_AMIZONE_API_URL || "https://api.ami.zoo.fullstacktics.com";
@@ -20,7 +32,8 @@ export function getLocalCredentials(): Credentials | null {
 export async function fetchFromAmizone<T>(
   endpoint: string,
   credentials?: Credentials,
-  schema?: z.ZodType<T>
+  schema?: z.ZodType<T>,
+  init?: Omit<RequestInit, "headers"> & { headers?: Record<string, string> }
 ): Promise<T> {
   const creds = credentials || getLocalCredentials();
   if (!creds) {
@@ -29,8 +42,10 @@ export async function fetchFromAmizone<T>(
 
   const auth = btoa(`${creds.username}:${creds.password}`);
   const response = await fetch(`${API_URL}${endpoint}`, {
+    ...init,
     headers: {
       Authorization: `Basic ${auth}`,
+      ...(init?.headers || {}),
     },
   });
 
@@ -38,7 +53,8 @@ export async function fetchFromAmizone<T>(
     if (response.status === 401) {
       throw new Error("Invalid credentials");
     }
-    throw new Error(`API error: ${response.statusText}`);
+    const message = await response.text().catch(() => "");
+    throw new Error(message || `API error: ${response.statusText}`);
   }
 
   const data = await response.json();
@@ -55,10 +71,41 @@ export const amizoneApi = {
   getProfile: (creds?: Credentials) => fetchFromAmizone<Profile>("/api/v1/user_profile", creds),
   getSemesters: (creds?: Credentials) => fetchFromAmizone<SemesterList>("/api/v1/semesters", creds),
   getCourses: (creds?: Credentials) => fetchFromAmizone<Courses>("/api/v1/courses", creds),
+  getCoursesBySemester: (creds: Credentials | undefined, semesterRef: string) =>
+    fetchFromAmizone<Courses>(`/api/v1/courses/${encodeURIComponent(semesterRef)}`, creds),
   getClassSchedule: (creds: Credentials | undefined, date: string) => {
     const [year, month, day] = date.split("-");
     return fetchFromAmizone<ScheduledClasses>(`/api/v1/class_schedule/${year}/${month}/${day}`, creds);
   },
+  // Legacy shape compatibility (some deployments return { macAddress }).
   getWifiInfo: (creds?: Credentials) => fetchFromAmizone<WifiInfo>("/api/v1/wifi_mac_address", creds),
-  getExamSchedule: (creds?: Credentials) => fetchFromAmizone<ExamSchedule>("/api/v1/exam_schedule", creds),
+  getWifiMacInfo: (creds?: Credentials) => fetchFromAmizone<WifiMacInfo>("/api/v1/wifi_mac", creds),
+  registerWifiMac: (creds: Credentials | undefined, address: string, overrideLimit = false) =>
+    fetchFromAmizone<void>(
+      "/api/v1/wifi_mac",
+      creds,
+      undefined,
+      {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ address, overrideLimit }),
+      }
+    ),
+  deregisterWifiMac: (creds: Credentials | undefined, address: string) =>
+    fetchFromAmizone<void>(`/api/v1/wifi_mac/${encodeURIComponent(address)}`, creds, undefined, { method: "DELETE" }),
+  getExamSchedule: (creds?: Credentials) => fetchFromAmizone<ExaminationSchedule>("/api/v1/exam_schedule", creds),
+  getExamResult: (creds: Credentials | undefined, semesterRef: string) =>
+    fetchFromAmizone<ExamResultRecords>(`/api/v1/exam_result/${encodeURIComponent(semesterRef)}`, creds),
+  getCurrentExamResult: (creds?: Credentials) => fetchFromAmizone<ExamResultRecords>("/api/v1/exam_result", creds),
+  submitFacultyFeedback: (creds: Credentials | undefined, payload: FillFacultyFeedbackRequest) =>
+    fetchFromAmizone<FillFacultyFeedbackResponse>(
+      "/api/v1/faculty/feedback/submit",
+      creds,
+      undefined,
+      {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify(payload),
+      }
+    ),
 };

@@ -80,6 +80,12 @@ export interface WifiInfo {
   macAddress: string;
 }
 
+export interface WifiMacInfo {
+  addresses: string[];
+  slots: number;
+  freeSlots: number;
+}
+
 export interface Exam {
   course: CourseRef;
   date: string;
@@ -88,4 +94,66 @@ export interface Exam {
 
 export interface ExamSchedule {
   exams: Exam[];
+}
+
+export interface ScheduledExam {
+  course: CourseRef;
+  time: string; // date-time
+  mode: string;
+  location?: string;
+}
+
+export interface ExaminationSchedule {
+  title?: string;
+  exams: ScheduledExam[];
+}
+
+export interface SemesterRef {
+  semesterRef: string;
+}
+
+export interface Score {
+  max: number;
+  grade: string;
+  gradePoint: number;
+}
+
+export interface Credits {
+  acquired: number;
+  effective: number;
+  points: number;
+}
+
+export interface TypeDate {
+  year: number;
+  month: number;
+  day: number;
+}
+
+export interface ExamResultRecord {
+  course: CourseRef;
+  score: Score;
+  credits: Credits;
+  publishDate?: TypeDate;
+}
+
+export interface OverallResult {
+  semester: SemesterRef;
+  semesterGradePointAverage: number;
+  cumulativeGradePointAverage: number;
+}
+
+export interface ExamResultRecords {
+  courseWise: ExamResultRecord[];
+  overall: OverallResult[];
+}
+
+export interface FillFacultyFeedbackRequest {
+  rating: number; // 1-5
+  queryRating: number; // 1-3
+  comment: string;
+}
+
+export interface FillFacultyFeedbackResponse {
+  filledFor: number;
 }

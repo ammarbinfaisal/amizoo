@@ -1,6 +1,5 @@
 import { NextRequest, NextResponse } from "next/server";
 import { cookies } from "next/headers";
-import { amizoneApi } from "@/lib/api";
 
 export async function POST(req: NextRequest) {
   try {
