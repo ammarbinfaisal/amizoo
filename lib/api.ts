@@ -1,7 +1,8 @@
 import { AttendanceRecords, Courses, Profile, ScheduledClasses, SemesterList } from "./types";
 import { z } from "zod";
 
-const API_URL = process.env.NEXT_PUBLIC_AMIZONE_API_URL || "http://localhost:8081";
+const rawApiUrl = process.env.NEXT_PUBLIC_AMIZONE_API_URL || "http://localhost:8081";
+const API_URL = rawApiUrl.startsWith("http") ? rawApiUrl : `https://${rawApiUrl}`;
 
 export interface Credentials {
   username: string;
