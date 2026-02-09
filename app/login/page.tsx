@@ -1,6 +1,6 @@
 "use client";
 
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { useRouter } from "next/navigation";
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
@@ -31,6 +31,14 @@ export default function LoginPage() {
     },
   });
 
+  useEffect(() => {
+    const user = localStorage.getItem("amizone_user");
+    const pass = localStorage.getItem("amizone_pass");
+    if (user && pass) {
+      router.push("/dashboard");
+    }
+  }, [router]);
+
   const onSubmit = async (values: LoginFormValues) => {
     setLoading(true);
 
@@ -42,6 +50,10 @@ export default function LoginPage() {
       });
 
       if (res.ok) {
+        // Store credentials in localStorage for client-side API calls
+        localStorage.setItem("amizone_user", values.username);
+        localStorage.setItem("amizone_pass", values.password);
+
         toast.success("Login successful");
         router.push("/dashboard");
         router.refresh();

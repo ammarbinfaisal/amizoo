@@ -1,9 +1,11 @@
-import { getAuthCredentials } from "@/lib/auth";
-import { amizoneApi } from "@/lib/api";
-import { redirect } from "next/navigation";
+"use client";
+
+import { useEffect, useState } from "react";
+import { amizoneApi, getLocalCredentials } from "@/lib/api";
+import { useRouter } from "next/navigation";
 import Link from "next/link";
 import { Schedule } from "@/components/Schedule";
-import { AttendanceRecord } from "@/lib/types";
+import { AttendanceRecord, AttendanceRecords, Courses, Profile, ScheduledClasses } from "@/lib/types";
 
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
@@ -11,48 +13,76 @@ import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Separator } from "@/components/ui/separator";
-import { LogOut, Calendar, GraduationCap, BarChart3 } from "lucide-react";
-import { Metadata } from "next";
+import { Skeleton } from "@/components/ui/skeleton";
+import { LogOut, Calendar, GraduationCap, BarChart3, RefreshCw } from "lucide-react";
 
-export const metadata: Metadata = {
-  title: "Dashboard",
-  description: "Your Amizone academic overview.",
-};
+export default function DashboardPage() {
+  const router = useRouter();
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState<string | null>(null);
+  
+  const [profile, setProfile] = useState<Profile | null>(null);
+  const [attendance, setAttendance] = useState<AttendanceRecords | null>(null);
+  const [schedule, setSchedule] = useState<ScheduledClasses | null>(null);
+  const [courses, setCourses] = useState<Courses | null>(null);
 
-export default async function DashboardPage() {
-  const credentials = await getAuthCredentials();
+  const fetchData = async () => {
+    const credentials = getLocalCredentials();
 
-  if (!credentials) {
-    redirect("/login");
+    if (!credentials) {
+      router.push("/login");
+      return;
+    }
+
+    setLoading(true);
+    setError(null);
+
+    const today = new Date().toISOString().split("T")[0];
+
+    try {
+      const [p, a, s, c] = await Promise.all([
+        amizoneApi.getProfile(credentials),
+        amizoneApi.getAttendance(credentials),
+        amizoneApi.getClassSchedule(credentials, today),
+        amizoneApi.getCourses(credentials),
+      ]);
+      
+      setProfile(p);
+      setAttendance(a);
+      setSchedule(s);
+      setCourses(c);
+    } catch (err: any) {
+      console.error(err);
+      setError(err.message || "Failed to load data");
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  useEffect(() => {
+    fetchData();
+  }, []);
+
+  if (loading && !profile) {
+    return <DashboardSkeleton />;
   }
 
-  const today = new Date().toISOString().split("T")[0];
-
-  let profile, attendance, schedule, courses;
-  try {
-    [profile, attendance, schedule, courses] = await Promise.all([
-      amizoneApi.getProfile(credentials),
-      amizoneApi.getAttendance(credentials),
-      amizoneApi.getClassSchedule(credentials, today),
-      amizoneApi.getCourses(credentials),
-    ]);
-  } catch (err) {
-    console.error(err);
+  if (error || !profile || !attendance || !schedule || !courses) {
     return (
       <div className="min-h-screen flex items-center justify-center p-4 bg-background">
         <Card className="max-w-md w-full border-destructive/20 bg-destructive/5">
           <CardHeader className="text-center">
             <CardTitle className="text-destructive">Failed to load data</CardTitle>
             <CardDescription>
-              We couldn&apos;t reach the Amizone API. This might be due to incorrect credentials or the server being down.
+              {error || "We couldn't reach the Amizone API. This might be due to incorrect credentials or the server being down."}
             </CardDescription>
           </CardHeader>
           <CardContent className="flex flex-col gap-3">
-            <Button asChild className="w-full">
-              <Link href="/login">Try Logging In Again</Link>
+            <Button onClick={fetchData} className="w-full">
+              <RefreshCw className="mr-2 h-4 w-4" /> Try Again
             </Button>
-            <Button asChild variant="ghost" className="w-full">
-              <Link href="/api/auth/logout">Logout</Link>
+            <Button asChild variant="outline" className="w-full">
+              <Link href="/login">Back to Login</Link>
             </Button>
           </CardContent>
         </Card>
@@ -61,6 +91,12 @@ export default async function DashboardPage() {
   }
 
   const overallPercentage = calculateOverallAttendance(attendance.records);
+
+  const handleLogout = () => {
+    localStorage.removeItem("amizone_user");
+    localStorage.removeItem("amizone_pass");
+    router.push("/api/auth/logout");
+  };
 
   return (
     <div className="min-h-screen bg-background text-foreground font-sans">
@@ -78,10 +114,8 @@ export default async function DashboardPage() {
               <span className="text-sm font-bold">{profile.name}</span>
               <span className="text-[10px] text-muted-foreground uppercase tracking-wider">{profile.enrollmentNumber}</span>
             </div>
-            <Button asChild variant="outline" size="icon" className="rounded-full">
-              <Link href="/api/auth/logout">
-                <LogOut className="h-4 w-4" />
-              </Link>
+            <Button variant="outline" size="icon" className="rounded-full" onClick={handleLogout}>
+              <LogOut className="h-4 w-4" />
             </Button>
           </div>
         </div>
@@ -256,13 +290,27 @@ function getAttendanceColor(attendance: { attended: number; held: number }) {
 }
 
 function getOverallAttendanceBg(records: AttendanceRecord[]) {
-
   const percentage = calculateOverallAttendance(records);
-
   if (percentage >= 75) return "bg-primary";
-
   if (percentage >= 60) return "bg-secondary";
-
   return "bg-destructive";
+}
 
+function DashboardSkeleton() {
+  return (
+    <div className="min-h-screen bg-background p-4 md:p-8 space-y-8 container max-w-6xl mx-auto">
+      <div className="flex justify-between items-center h-16">
+        <Skeleton className="h-8 w-32" />
+        <Skeleton className="h-10 w-10 rounded-full" />
+      </div>
+      <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
+        <Skeleton className="h-32 w-full" />
+        <Skeleton className="h-32 w-full md:col-span-2" />
+      </div>
+      <div className="space-y-4">
+        <Skeleton className="h-10 w-64" />
+        <Skeleton className="h-[400px] w-full" />
+      </div>
+    </div>
+  );
 }
