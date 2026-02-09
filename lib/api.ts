@@ -59,4 +59,6 @@ export const amizoneApi = {
     const [year, month, day] = date.split("-");
     return fetchFromAmizone<ScheduledClasses>(`/api/v1/class_schedule/${year}/${month}/${day}`, creds);
   },
+  getWifiInfo: (creds?: Credentials) => fetchFromAmizone<WifiInfo>("/api/v1/wifi_mac_address", creds),
+  getExamSchedule: (creds?: Credentials) => fetchFromAmizone<ExamSchedule>("/api/v1/exam_schedule", creds),
 };

@@ -5,7 +5,7 @@ import { amizoneApi, getLocalCredentials } from "@/lib/api";
 import { useRouter } from "next/navigation";
 import Link from "next/link";
 import { Schedule } from "@/components/Schedule";
-import { AttendanceRecord, AttendanceRecords, Courses, Profile, ScheduledClasses } from "@/lib/types";
+import { AttendanceRecord, AttendanceRecords, Courses, ExamSchedule, Profile, ScheduledClasses, WifiInfo } from "@/lib/types";
 
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
@@ -14,7 +14,7 @@ import { Button } from "@/components/ui/button";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Separator } from "@/components/ui/separator";
 import { Skeleton } from "@/components/ui/skeleton";
-import { LogOut, Calendar, GraduationCap, BarChart3, RefreshCw } from "lucide-react";
+import { LogOut, Calendar, GraduationCap, BarChart3, RefreshCw, Wifi, FileText } from "lucide-react";
 
 export default function DashboardPage() {
   const router = useRouter();
@@ -31,6 +31,9 @@ export default function DashboardPage() {
 
   const [courses, setCourses] = useState<Courses | null>(null);
   const [coursesError, setCoursesError] = useState<string | null>(null);
+
+  const [wifi, setWifi] = useState<WifiInfo | null>(null);
+  const [exams, setExams] = useState<ExamSchedule | null>(null);
 
   const fetchData = async () => {
     const credentials = getLocalCredentials();
@@ -49,6 +52,8 @@ export default function DashboardPage() {
       amizoneApi.getAttendance(credentials),
       amizoneApi.getClassSchedule(credentials, today),
       amizoneApi.getCourses(credentials),
+      amizoneApi.getWifiInfo(credentials).catch(() => null),
+      amizoneApi.getExamSchedule(credentials).catch(() => null),
     ]);
 
     if (results[0].status === "fulfilled") {
@@ -77,6 +82,14 @@ export default function DashboardPage() {
       setCoursesError(null);
     } else {
       setCoursesError(results[3].reason?.message || "Failed to load courses");
+    }
+
+    if (results[4].status === "fulfilled") {
+      setWifi(results[4].value);
+    }
+
+    if (results[5].status === "fulfilled") {
+      setExams(results[5].value);
     }
 
     setLoading(false);
@@ -196,6 +209,14 @@ export default function DashboardPage() {
                   <p className="text-[10px] uppercase text-muted-foreground font-bold tracking-wider">ID Card</p>
                   <p className="text-sm font-medium">{profile.idCardNumber}</p>
                 </div>
+                {wifi && (
+                  <div className="space-y-0.5">
+                    <p className="text-[10px] uppercase text-muted-foreground font-bold tracking-wider flex items-center gap-1">
+                      <Wifi className="h-2.5 w-2.5" /> Wi-Fi MAC
+                    </p>
+                    <p className="text-sm font-medium tabular-nums">{wifi.macAddress}</p>
+                  </div>
+                )}
               </CardContent>
             </Card>
           ) : (
@@ -216,6 +237,10 @@ export default function DashboardPage() {
             <TabsTrigger value="courses" className="gap-2 font-bold uppercase text-[10px] tracking-widest px-6">
               <GraduationCap className="h-3.5 w-3.5" />
               Courses
+            </TabsTrigger>
+            <TabsTrigger value="exams" className="gap-2 font-bold uppercase text-[10px] tracking-widest px-6">
+              <FileText className="h-3.5 w-3.5" />
+              Exams
             </TabsTrigger>
           </TabsList>
 
@@ -293,13 +318,23 @@ export default function DashboardPage() {
                     </CardHeader>
                     <CardContent>
                       <Separator className="mb-4 bg-border/50" />
-                      <div className="flex justify-between items-center text-[10px] font-black uppercase tracking-widest opacity-60">
-                        <span>{course.ref.code}</span>
-                        <div className="flex items-center gap-2">
+                      <div className="space-y-3">
+                        <div className="flex justify-between items-center text-[10px] font-black uppercase tracking-widest">
+                          <span className="opacity-60">Attendance</span>
                           <span className={getAttendanceColor(course.attendance)}>
-                            {calculatePercentage(course.attendance)}% Att.
+                            {calculatePercentage(course.attendance)}%
                           </span>
                         </div>
+                        <div className="flex justify-between items-center text-[10px] font-black uppercase tracking-widest">
+                          <span className="opacity-60">Internal Marks</span>
+                          <span className="text-primary">
+                            {course.internalMarks.have} / {course.internalMarks.max}
+                          </span>
+                        </div>
+                      </div>
+                      <Separator className="my-4 bg-border/50" />
+                      <div className="flex justify-between items-center text-[10px] font-black uppercase tracking-widest opacity-60">
+                        <span>{course.ref.code}</span>
                       </div>
                     </CardContent>
                   </Card>
@@ -307,6 +342,36 @@ export default function DashboardPage() {
               </div>
             ) : (
               <ErrorCard title="Courses" error={coursesError} onRetry={fetchData} />
+            )}
+          </TabsContent>
+          <TabsContent value="exams" className="space-y-4">
+            <div className="flex justify-between items-center">
+              <h2 className="text-xl font-black uppercase tracking-tight">Exam Schedule</h2>
+            </div>
+            {exams && exams.exams.length > 0 ? (
+              <div className="grid gap-4">
+                {exams.exams.map((exam, i) => (
+                  <Card key={i} className="overflow-hidden border-border bg-card shadow-sm">
+                    <CardContent className="p-6 flex justify-between items-center">
+                      <div>
+                        <h4 className="font-black text-primary uppercase tracking-tight">{exam.course.name}</h4>
+                        <p className="text-xs text-muted-foreground font-bold uppercase tracking-wider">{exam.course.code}</p>
+                      </div>
+                      <div className="text-right">
+                        <div className="text-sm font-black text-primary">{exam.date}</div>
+                        <div className="text-[10px] text-muted-foreground font-bold uppercase">{exam.time}</div>
+                      </div>
+                    </CardContent>
+                  </Card>
+                ))}
+              </div>
+            ) : (
+              <Card className="border-dashed">
+                <CardContent className="flex flex-col items-center justify-center p-12 text-center">
+                  <FileText className="h-8 w-8 text-muted-foreground mb-4 opacity-20" />
+                  <p className="text-muted-foreground font-medium">No exams scheduled at the moment.</p>
+                </CardContent>
+              </Card>
             )}
           </TabsContent>
         </Tabs>

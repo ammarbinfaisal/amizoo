@@ -75,3 +75,17 @@ export interface Course {
 export interface Courses {
   courses: Course[];
 }
+
+export interface WifiInfo {
+  macAddress: string;
+}
+
+export interface Exam {
+  course: CourseRef;
+  date: string;
+  time: string;
+}
+
+export interface ExamSchedule {
+  exams: Exam[];
+}
