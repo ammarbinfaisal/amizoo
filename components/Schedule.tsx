@@ -50,8 +50,14 @@ export function Schedule({ schedule }: { schedule: ScheduledClasses }) {
 }
 
 function formatTime(timestamp: string) {
-  const date = new Date(timestamp);
-  return date.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit', hour12: false });
+  // Assume the timestamp is in IST (UTC+5:30)
+  const date = new Date(timestamp + 'Z'); // Treat as UTC
+  return date.toLocaleTimeString('en-IN', {
+    hour: '2-digit',
+    minute: '2-digit',
+    hour12: false,
+    timeZone: 'Asia/Kolkata'
+  });
 }
 
 function getBadgeVariant(state: string): "default" | "secondary" | "destructive" | "outline" {
