@@ -18,20 +18,24 @@ export function Schedule({ schedule }: { schedule: ScheduledClasses }) {
   return (
     <div className="grid gap-4">
       {schedule.classes.map((cls, i) => (
-        <Card key={i} className="overflow-hidden border-border bg-card hover:bg-accent/5 transition-colors">
+        <Card key={i} className="overflow-hidden border-border bg-card hover:bg-secondary/5 transition-all shadow-sm">
           <CardContent className="p-0 flex flex-col sm:flex-row">
-            <div className="bg-secondary/20 sm:w-24 p-4 flex flex-col items-center justify-center border-b sm:border-b-0 sm:border-r border-border">
-              <span className="text-sm font-black">{formatTime(cls.startTime)}</span>
-              <span className="text-[10px] text-muted-foreground uppercase tracking-wider">{formatTime(cls.endTime)}</span>
+            <div className="bg-muted sm:w-28 p-6 flex flex-col items-center justify-center border-b sm:border-b-0 sm:border-r border-border shrink-0">
+              <span className="text-sm font-black text-primary leading-none mb-1">{formatTime(cls.startTime)}</span>
+              <span className="text-[10px] text-muted-foreground uppercase font-bold tracking-tighter">
+                {cls.startTime.substring(11, 16)} - {cls.endTime.substring(11, 16)}
+              </span>
             </div>
-            <div className="flex-grow p-4 space-y-3">
-              <div className="flex justify-between items-start gap-4">
-                <h4 className="font-bold leading-tight">{cls.course.name}</h4>
-                <Badge variant={getBadgeVariant(cls.attendance)} className="font-bold shrink-0">
+            <div className="flex-grow p-6 flex flex-col justify-center">
+              <div className="flex justify-between items-start gap-4 mb-3">
+                <h4 className="text-base font-black leading-tight text-primary uppercase tracking-tight">
+                  {cls.course.name.includes(' - ') ? cls.course.name.split(' - ')[1] : cls.course.name}
+                </h4>
+                <Badge variant={getBadgeVariant(cls.attendance)} className="font-black uppercase text-[10px] px-3 py-1">
                   {cls.attendance}
                 </Badge>
               </div>
-              <div className="flex flex-wrap gap-x-6 gap-y-2 text-sm text-muted-foreground">
+              <div className="flex flex-wrap gap-x-6 gap-y-2 text-xs font-medium text-muted-foreground">
                 <div className="flex items-center gap-1.5">
                   <User className="h-3.5 w-3.5" />
                   <span>{cls.faculty}</span>
@@ -50,8 +54,9 @@ export function Schedule({ schedule }: { schedule: ScheduledClasses }) {
 }
 
 function formatTime(timestamp: string) {
-  // Assume the timestamp is in IST (UTC+5:30)
-  const date = new Date(timestamp + 'Z'); // Treat as UTC
+  // Ensure the timestamp is treated as UTC if it doesn't have a timezone suffix
+  const dateStr = timestamp.endsWith('Z') ? timestamp : timestamp + 'Z';
+  const date = new Date(dateStr);
   return date.toLocaleTimeString('en-IN', {
     hour: '2-digit',
     minute: '2-digit',
