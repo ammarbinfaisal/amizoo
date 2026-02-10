@@ -6,6 +6,7 @@ import { GraduationCap, LogOut } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { useRouter } from "next/navigation";
 import { Skeleton } from "@/components/ui/skeleton";
+import { PWAInstallPrompt } from "@/components/PWAInstallPrompt";
 import React from "react";
 
 export default function DashboardLayout({
@@ -77,6 +78,7 @@ function DashboardHeader() {
               <span className="text-[10px] text-muted-foreground uppercase tracking-wider">{profile.enrollmentNumber}</span>
             </div>
           ) : null}
+          <PWAInstallPrompt />
           <Button variant="outline" size="icon" className="rounded-full h-10 w-10 border-2" onClick={handleLogout}>
             <LogOut className="h-4 w-4" />
           </Button>
