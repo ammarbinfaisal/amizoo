@@ -58,7 +58,7 @@ export default function LoginPage() {
 
   return (
     <div className="flex min-h-screen items-center justify-center bg-background p-4">
-      <Card className="w-full max-w-md border-border bg-card">
+      <Card className="w-full max-w-md border-border bg-card py-6">
         <CardHeader className="text-center space-y-1">
           <CardTitle className="text-3xl font-bold tracking-tight">Amizoo</CardTitle>
           <CardDescription className="text-muted-foreground">

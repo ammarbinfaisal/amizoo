@@ -57,7 +57,7 @@ export default function CoursesTab() {
 
   return (
     <div className="space-y-6">
-      <Card className="border-border shadow-sm">
+      <Card className="border-border shadow-sm py-6">
         <CardHeader className="pb-4">
           <CardTitle className="text-sm font-black uppercase tracking-widest">Semester</CardTitle>
           <CardDescription>Switch semesters to view older courses.</CardDescription>
@@ -98,14 +98,14 @@ export default function CoursesTab() {
       </Card>
 
       {error ? (
-        <Card className="border-destructive/20 bg-destructive/5 p-12 text-center">
+        <Card className="border-destructive/20 bg-destructive/5 py-6 p-12 text-center">
             <p className="text-destructive font-bold mb-4">{error}</p>
             <Button onClick={() => fetchData(semesterRef)} variant="outline">Retry</Button>
         </Card>
       ) : courses && (
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4 sm:gap-6">
           {courses.courses.map((course) => (
-            <Card key={course.ref.code} className="group border-border hover:border-secondary transition-all shadow-sm">
+            <Card key={course.ref.code} className="group border-border hover:border-secondary transition-all shadow-sm py-6">
               <CardHeader className="p-4 sm:p-6">
                 <CardTitle className="text-base sm:text-lg font-bold group-hover:text-secondary-foreground transition-colors leading-tight line-clamp-2">
                   {course.ref.name}

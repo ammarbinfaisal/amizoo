@@ -49,7 +49,7 @@ export default function ResultsTab() {
         <p className="text-sm text-muted-foreground">Detailed performance analysis</p>
       </div>
 
-      <Card className="border-border shadow-sm">
+      <Card className="border-border shadow-sm py-6">
         <CardHeader className="pb-4 p-4 sm:p-6">
           <CardTitle className="text-sm font-black uppercase tracking-widest">Semester</CardTitle>
           <CardDescription>Switch semesters to view older results.</CardDescription>
@@ -92,14 +92,14 @@ export default function ResultsTab() {
       {loading && !data ? (
         <Skeleton className="h-[400px] w-full" />
       ) : error ? (
-        <Card className="border-destructive/20 bg-destructive/5 p-12 text-center">
+        <Card className="border-destructive/20 bg-destructive/5 py-6 p-12 text-center">
             <p className="text-destructive font-bold mb-4">{error}</p>
             <Button onClick={() => fetchData(semesterRef)} variant="outline">Retry</Button>
         </Card>
       ) : data && (
         <div className="space-y-6">
           {data.overall?.length > 0 && (
-            <Card className="border-border shadow-sm">
+            <Card className="border-border shadow-sm py-6">
               <CardHeader className="pb-0">
                 <CardTitle className="text-xl font-black uppercase tracking-tight">Summary</CardTitle>
               </CardHeader>
@@ -127,7 +127,7 @@ export default function ResultsTab() {
           )}
 
           {data.courseWise?.length > 0 ? (
-            <Card className="border-border shadow-sm overflow-hidden">
+            <Card className="border-border shadow-sm overflow-hidden py-6">
               <CardHeader className="pb-0">
                 <CardTitle className="text-xl font-black uppercase tracking-tight">Course Results</CardTitle>
               </CardHeader>
@@ -170,7 +170,7 @@ export default function ResultsTab() {
               </CardContent>
             </Card>
           ) : (
-            <Card className="border-dashed">
+            <Card className="border-dashed py-6">
               <CardContent className="flex flex-col items-center justify-center p-12 text-center">
                 <Award className="h-8 w-8 text-muted-foreground mb-4 opacity-20" />
                 <p className="text-muted-foreground font-medium">No results available for this semester.</p>

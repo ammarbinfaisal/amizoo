@@ -79,19 +79,19 @@ export default function WifiTab() {
       </div>
 
       <div className="grid grid-cols-1 md:grid-cols-3 gap-4 sm:gap-6">
-        <Card className="bg-card border-border shadow-sm">
+        <Card className="bg-card border-border shadow-sm py-6">
           <CardHeader className="pb-2 p-4 sm:p-6">
             <CardDescription className="text-[10px] uppercase font-bold tracking-widest text-muted-foreground">Slots</CardDescription>
             <CardTitle className="text-2xl sm:text-3xl font-black tabular-nums">{wifiMac?.slots ?? "—"}</CardTitle>
           </CardHeader>
         </Card>
-        <Card className="bg-card border-border shadow-sm">
+        <Card className="bg-card border-border shadow-sm py-6">
           <CardHeader className="pb-2 p-4 sm:p-6">
             <CardDescription className="text-[10px] uppercase font-bold tracking-widest text-muted-foreground">Free Slots</CardDescription>
             <CardTitle className="text-2xl sm:text-3xl font-black tabular-nums">{wifiMac?.freeSlots ?? "—"}</CardTitle>
           </CardHeader>
         </Card>
-        <Card className="bg-card border-border shadow-sm">
+        <Card className="bg-card border-border shadow-sm py-6">
           <CardHeader className="pb-2 p-4 sm:p-6">
             <CardDescription className="text-[10px] uppercase font-bold tracking-widest text-muted-foreground">Registered</CardDescription>
             <CardTitle className="text-2xl sm:text-3xl font-black tabular-nums">{wifiMac?.addresses?.length ?? 0}</CardTitle>
@@ -99,7 +99,7 @@ export default function WifiTab() {
         </Card>
       </div>
 
-      <Card className="border-border shadow-sm">
+      <Card className="border-border shadow-sm py-6">
         <CardHeader className="pb-4 p-4 sm:p-6">
           <CardTitle className="text-sm font-black uppercase tracking-widest">Add MAC</CardTitle>
         </CardHeader>
@@ -129,7 +129,7 @@ export default function WifiTab() {
         </CardContent>
       </Card>
 
-      <Card className="border-border shadow-sm overflow-hidden">
+      <Card className="border-border shadow-sm overflow-hidden py-6">
         <CardHeader className="pb-0 p-4 sm:p-6">
           <CardTitle className="text-sm font-black uppercase tracking-widest">Registered Devices</CardTitle>
         </CardHeader>

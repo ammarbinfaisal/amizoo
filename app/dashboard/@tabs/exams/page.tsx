@@ -63,7 +63,7 @@ export default function ExamsTab() {
       {exams.length > 0 ? (
         <div className="grid gap-3 sm:gap-4">
           {exams.map((exam, i) => (
-            <Card key={i} className="overflow-hidden border-border bg-card shadow-sm">
+            <Card key={i} className="overflow-hidden border-border bg-card shadow-sm py-6">
               <CardContent className="p-4 sm:p-6 flex flex-row justify-between items-center gap-4">
                 <div className="min-w-0">
                   <h4 className="font-black text-primary uppercase tracking-tight truncate sm:whitespace-normal">{exam.course.name}</h4>
@@ -83,7 +83,7 @@ export default function ExamsTab() {
           ))}
         </div>
       ) : (
-        <Card className="border-dashed">
+        <Card className="border-dashed py-6">
           <CardContent className="flex flex-col items-center justify-center p-12 text-center">
             <FileText className="h-8 w-8 text-muted-foreground mb-4 opacity-20" />
             <p className="text-muted-foreground font-medium">No exams scheduled at the moment.</p>

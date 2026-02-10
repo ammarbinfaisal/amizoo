@@ -52,7 +52,7 @@ export default function FeedbackTab() {
       </div>
 
       {filledFor !== null && (
-        <Card className="border-primary/20 bg-primary/5">
+        <Card className="border-primary/20 bg-primary/5 py-6">
           <CardHeader className="p-4 sm:p-6">
             <CardTitle className="text-sm font-black uppercase tracking-widest text-primary">Success</CardTitle>
             <CardDescription className="text-xs">
@@ -62,7 +62,7 @@ export default function FeedbackTab() {
         </Card>
       )}
 
-      <Card className="border-border shadow-sm">
+      <Card className="border-border shadow-sm py-6">
         <CardHeader className="pb-4 p-4 sm:p-6">
           <CardTitle className="text-sm font-black uppercase tracking-widest">Ratings</CardTitle>
           <CardDescription>Select ratings to apply to all faculty</CardDescription>

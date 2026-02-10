@@ -13,7 +13,7 @@ export default function AttendanceTab() {
 
   if (loading && !attendance) {
     return (
-      <Card>
+      <Card className="py-6">
         <CardHeader>
           <Skeleton className="h-8 w-48" />
         </CardHeader>
@@ -30,7 +30,7 @@ export default function AttendanceTab() {
 
   if (error && !attendance) {
     return (
-      <Card className="border-destructive/20 bg-destructive/5 text-center p-12">
+      <Card className="border-destructive/20 bg-destructive/5 text-center p-12 py-6">
         <p className="text-destructive font-bold mb-4">{error}</p>
         <Button onClick={refresh} variant="outline"><RefreshCw className="mr-2 h-4 w-4" /> Retry</Button>
       </Card>
@@ -40,7 +40,7 @@ export default function AttendanceTab() {
   if (!attendance) return null;
 
   return (
-    <Card className="border-border shadow-sm">
+    <Card className="border-border shadow-sm py-6">
       <CardHeader className="pb-0">
         <CardTitle className="text-xl font-black uppercase tracking-tight">Attendance Breakdown</CardTitle>
         <CardDescription>Detailed statistics per course for current semester</CardDescription>
