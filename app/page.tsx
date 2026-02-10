@@ -9,9 +9,9 @@ export default function Home() {
   useEffect(() => {
     const user = localStorage.getItem("amizone_user");
     const pass = localStorage.getItem("amizone_pass");
-    
+
     if (user && pass) {
-      router.push("/dashboard");
+      router.push("/dashboard/schedule");
     } else {
       router.push("/login");
     }
