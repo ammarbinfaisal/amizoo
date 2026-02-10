@@ -19,7 +19,7 @@ export function Schedule({ schedule, date }: { schedule: ScheduledClasses; date?
   }
 
   return (
-    <div className="grid gap-3">
+    <div className="grid gap-3 ml-auto">
       {schedule.classes.map((cls, i) => (
         <Card key={i} className="overflow-hidden border-border bg-card hover:bg-secondary/5 transition-all shadow-sm">
           <CardContent className="p-0 flex flex-row h-24 sm:h-auto">
