@@ -107,12 +107,12 @@ export default function CoursesTab() {
           {courses.courses.map((course) => (
             <Card key={course.ref.code} className="group border-border hover:border-secondary transition-all shadow-sm">
               <CardHeader className="p-4 sm:p-6">
-                <CardDescription className="text-[10px] uppercase font-bold tracking-widest text-muted-foreground">
-                  {course.type}
-                </CardDescription>
                 <CardTitle className="text-base sm:text-lg font-bold group-hover:text-secondary-foreground transition-colors leading-tight line-clamp-2">
                   {course.ref.name}
                 </CardTitle>
+                <CardDescription className="text-[10px] uppercase font-bold tracking-widest text-muted-foreground">
+                  {course.type}
+                </CardDescription>
               </CardHeader>
               <CardContent className="p-4 sm:p-6 pt-0">
                 <Separator className="mb-4 bg-border/50" />
