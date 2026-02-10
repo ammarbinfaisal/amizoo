@@ -44,25 +44,15 @@ export default function ResultsTab() {
 
   return (
     <div className="space-y-6">
-      <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-3">
-        <div>
-          <h2 className="text-xl font-black uppercase tracking-tight">Exam Results</h2>
-          <p className="text-sm text-muted-foreground">Detailed performance analysis</p>
-        </div>
-        <Button
-          variant="outline"
-          onClick={() => fetchData(semesterRef)}
-          disabled={loading}
-          className="font-bold uppercase text-[10px] tracking-widest"
-        >
-          <RefreshCw className={loading ? "animate-spin mr-2" : "mr-2"} size={14} />
-          Refresh
-        </Button>
+      <div>
+        <h2 className="text-xl font-black uppercase tracking-tight">Exam Results</h2>
+        <p className="text-sm text-muted-foreground">Detailed performance analysis</p>
       </div>
 
       <Card className="border-border shadow-sm">
         <CardHeader className="pb-4 p-4 sm:p-6">
           <CardTitle className="text-sm font-black uppercase tracking-widest">Semester</CardTitle>
+          <CardDescription>Switch semesters to view older results.</CardDescription>
         </CardHeader>
         <CardContent className="flex flex-wrap gap-2 p-4 sm:p-6 pt-0">
           <Button
@@ -86,6 +76,16 @@ export default function ResultsTab() {
               {s.name}
             </Button>
           ))}
+          <Button
+            size="sm"
+            variant="outline"
+            onClick={() => fetchData(semesterRef)}
+            disabled={loading}
+            className="font-bold uppercase text-[10px] tracking-widest ml-auto"
+          >
+            <RefreshCw className={`mr-2 h-3 w-3 ${loading ? "animate-spin" : ""}`} />
+            Refresh
+          </Button>
         </CardContent>
       </Card>
 
