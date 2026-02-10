@@ -42,7 +42,9 @@ export default function ScheduleTab() {
     <div className="space-y-4">
       <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4">
         <h2 className="text-xl font-black uppercase tracking-tight">Class Schedule</h2>
-        <DateSelector date={date} onChange={setDate} />
+        <div className="w-full flex justify-end sm:w-auto">
+          <DateSelector date={date} onChange={setDate} />
+        </div>
       </div>
 
       {loading ? (
