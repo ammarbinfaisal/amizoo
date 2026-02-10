@@ -2,6 +2,7 @@ import { ScheduledClasses } from "@/lib/types";
 import { Badge } from "@/components/ui/badge";
 import { Card, CardContent } from "@/components/ui/card";
 import { Clock, MapPin, User } from "lucide-react";
+import { formatAmizoneTime, formatClassRange } from "@/lib/date-utils";
 
 export function Schedule({ schedule }: { schedule: ScheduledClasses }) {
   if (schedule.classes.length === 0) {
@@ -16,32 +17,34 @@ export function Schedule({ schedule }: { schedule: ScheduledClasses }) {
   }
 
   return (
-    <div className="grid gap-4">
+    <div className="grid gap-3">
       {schedule.classes.map((cls, i) => (
         <Card key={i} className="overflow-hidden border-border bg-card hover:bg-secondary/5 transition-all shadow-sm">
-          <CardContent className="p-0 flex flex-col sm:flex-row">
-            <div className="bg-muted sm:w-28 p-6 flex flex-col items-center justify-center border-b sm:border-b-0 sm:border-r border-border shrink-0">
-              <span className="text-sm font-black text-primary leading-none mb-1">{formatTime(cls.startTime)}</span>
-              <span className="text-[10px] text-muted-foreground uppercase font-bold tracking-tighter">
-                {cls.startTime.substring(11, 16)} - {cls.endTime.substring(11, 16)}
+          <CardContent className="p-0 flex flex-row h-24 sm:h-auto">
+            <div className="bg-muted w-20 sm:w-28 p-2 sm:p-6 flex flex-col items-center justify-center border-r border-border shrink-0">
+              <span className="text-xs sm:text-sm font-black text-primary leading-none mb-1 text-center">
+                {formatAmizoneTime(cls.startTime)}
+              </span>
+              <span className="text-[8px] sm:text-[10px] text-muted-foreground uppercase font-bold tracking-tighter text-center">
+                {formatClassRange(cls.startTime, cls.endTime)}
               </span>
             </div>
-            <div className="flex-grow p-6 flex flex-col justify-center">
-              <div className="flex justify-between items-start gap-4 mb-3">
-                <h4 className="text-base font-black leading-tight text-primary uppercase tracking-tight">
+            <div className="flex-grow p-3 sm:p-6 flex flex-col justify-center min-w-0">
+              <div className="flex justify-between items-start gap-2 mb-1 sm:mb-3">
+                <h4 className="text-xs sm:text-base font-black leading-tight text-primary uppercase tracking-tight truncate">
                   {cls.course.name.includes(' - ') ? cls.course.name.split(' - ')[1] : cls.course.name}
                 </h4>
-                <Badge variant={getBadgeVariant(cls.attendance)} className="font-black uppercase text-[10px] px-3 py-1">
+                <Badge variant={getBadgeVariant(cls.attendance)} className="font-black uppercase text-[8px] sm:text-[10px] px-2 sm:px-3 py-0.5 sm:py-1 shrink-0">
                   {cls.attendance}
                 </Badge>
               </div>
-              <div className="flex flex-wrap gap-x-6 gap-y-2 text-xs font-medium text-muted-foreground">
-                <div className="flex items-center gap-1.5">
-                  <User className="h-3.5 w-3.5" />
-                  <span>{cls.faculty}</span>
+              <div className="flex flex-col sm:flex-row sm:flex-wrap gap-x-6 gap-y-1 text-[10px] sm:text-xs font-medium text-muted-foreground">
+                <div className="flex items-center gap-1.5 truncate">
+                  <User className="h-3 w-3 sm:h-3.5 sm:w-3.5 shrink-0" />
+                  <span className="truncate">{cls.faculty}</span>
                 </div>
-                <div className="flex items-center gap-1.5">
-                  <MapPin className="h-3.5 w-3.5" />
+                <div className="flex items-center gap-1.5 shrink-0">
+                  <MapPin className="h-3 w-3 sm:h-3.5 sm:w-3.5 shrink-0" />
                   <span>{cls.room}</span>
                 </div>
               </div>
@@ -51,18 +54,6 @@ export function Schedule({ schedule }: { schedule: ScheduledClasses }) {
       ))}
     </div>
   );
-}
-
-function formatTime(timestamp: string) {
-  // Ensure the timestamp is treated as UTC if it doesn't have a timezone suffix
-  const dateStr = timestamp.endsWith('Z') ? timestamp : timestamp + 'Z';
-  const date = new Date(dateStr);
-  return date.toLocaleTimeString('en-IN', {
-    hour: '2-digit',
-    minute: '2-digit',
-    hour12: false,
-    timeZone: 'Asia/Kolkata'
-  });
 }
 
 function getBadgeVariant(state: string): "default" | "secondary" | "destructive" | "outline" {
