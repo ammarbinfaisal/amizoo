@@ -5,8 +5,8 @@ export const runtime = "edge";
 
 // Image metadata
 export const size = {
-  width: 32,
-  height: 32,
+  width: 512,
+  height: 512,
 };
 export const contentType = "image/png";
 
@@ -17,7 +17,7 @@ export default function Icon() {
       // Image boundary
       <div
         style={{
-          fontSize: 24,
+          fontSize: 256,
           background: "#171717",
           width: "100%",
           height: "100%",
@@ -25,7 +25,6 @@ export default function Icon() {
           alignItems: "center",
           justifyContent: "center",
           color: "#FAFAFA",
-          borderRadius: "8px",
           fontWeight: 900,
         }}
       >
