@@ -64,7 +64,7 @@ export default function ScheduleTab() {
           </CardContent>
         </Card>
       ) : schedule ? (
-        <Schedule schedule={schedule} />
+        <Schedule schedule={schedule} date={date} />
       ) : null}
     </div>
   );

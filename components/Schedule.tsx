@@ -3,14 +3,16 @@ import { Badge } from "@/components/ui/badge";
 import { Card, CardContent } from "@/components/ui/card";
 import { Clock, MapPin, User } from "lucide-react";
 import { formatAmizoneTime, formatClassRange } from "@/lib/date-utils";
+import { format } from "date-fns";
 
-export function Schedule({ schedule }: { schedule: ScheduledClasses }) {
+export function Schedule({ schedule, date }: { schedule: ScheduledClasses; date?: Date }) {
   if (schedule.classes.length === 0) {
+    const dateStr = date ? format(date, "EEEE, MMM d") : "today";
     return (
       <Card className="border-dashed">
         <CardContent className="flex flex-col items-center justify-center p-12 text-center">
           <Clock className="h-8 w-8 text-muted-foreground mb-4 opacity-20" />
-          <p className="text-muted-foreground font-medium">No classes scheduled for today.</p>
+          <p className="text-muted-foreground font-medium">No classes scheduled for {dateStr}.</p>
         </CardContent>
       </Card>
     );
