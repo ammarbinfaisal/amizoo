@@ -13,11 +13,11 @@ export default function AttendanceTab() {
 
   if (loading && !attendance) {
     return (
-      <Card className="py-6">
-        <CardHeader>
+      <Card className="py-4 md:py-6">
+        <CardHeader className="px-4 md:px-6">
           <Skeleton className="h-8 w-48" />
         </CardHeader>
-        <CardContent>
+        <CardContent className="px-4 md:px-6">
           <div className="space-y-4">
             <Skeleton className="h-10 w-full" />
             <Skeleton className="h-10 w-full" />
@@ -30,7 +30,7 @@ export default function AttendanceTab() {
 
   if (error && !attendance) {
     return (
-      <Card className="border-destructive/20 bg-destructive/5 text-center p-12 py-6">
+      <Card className="border-destructive/20 bg-destructive/5 text-center p-4 md:p-8">
         <p className="text-destructive font-bold mb-4">{error}</p>
         <Button onClick={refresh} variant="outline"><RefreshCw className="mr-2 h-4 w-4" /> Retry</Button>
       </Card>
@@ -40,44 +40,57 @@ export default function AttendanceTab() {
   if (!attendance) return null;
 
   return (
-    <Card className="border-border shadow-sm py-6">
-      <CardHeader className="pb-0">
-        <CardTitle className="text-xl font-black uppercase tracking-tight">Attendance Breakdown</CardTitle>
+    <Card className="border-border shadow-sm py-4 md:py-6">
+      <CardHeader className="pb-0 px-4 md:px-6">
+        <CardTitle className="text-lg md:text-xl font-black uppercase tracking-tight">Attendance Breakdown</CardTitle>
         <CardDescription>Detailed statistics per course for current semester</CardDescription>
       </CardHeader>
-      <CardContent className="p-0 pt-6">
-        <div className="overflow-x-auto">
-          <Table>
-            <TableHeader>
-              <TableRow className="hover:bg-transparent border-b">
-                <TableHead className="w-[40%] min-w-[150px] font-bold uppercase text-[10px] tracking-widest px-6">Course</TableHead>
-                <TableHead className="font-bold uppercase text-[10px] tracking-widest">Ratio</TableHead>
-                <TableHead className="text-right font-bold uppercase text-[10px] tracking-widest px-6">Progress</TableHead>
-              </TableRow>
-            </TableHeader>
-            <TableBody>
-              {attendance.records.map((record) => (
-                <TableRow key={record.course.code} className="group transition-colors">
-                  <TableCell className="px-6 py-4">
-                    <div className="font-bold group-hover:text-primary transition-colors line-clamp-2">{record.course.name}</div>
-                    <div className="text-[10px] text-muted-foreground uppercase tracking-wider font-medium">{record.course.code}</div>
-                  </TableCell>
-                  <TableCell className="font-medium text-sm tabular-nums whitespace-nowrap">
-                    {record.attendance.attended} / {record.attendance.held}
-                  </TableCell>
-                  <TableCell className="text-right px-6">
+      <CardContent className="p-0 pt-4 md:pt-6">
+        <Table className="table-fixed md:table-auto">
+          <TableHeader>
+            <TableRow className="hover:bg-transparent border-b">
+              <TableHead className="w-full md:w-[40%] font-bold uppercase text-[10px] tracking-widest px-3 md:px-6">Course</TableHead>
+              <TableHead className="hidden md:table-cell font-bold uppercase text-[10px] tracking-widest">Ratio</TableHead>
+              <TableHead className="hidden md:table-cell text-right font-bold uppercase text-[10px] tracking-widest px-6">Progress</TableHead>
+            </TableRow>
+          </TableHeader>
+          <TableBody>
+            {attendance.records.map((record) => (
+              <TableRow key={record.course.code} className="group transition-colors">
+                <TableCell className="px-3 py-3 md:px-6 md:py-4 whitespace-normal align-top">
+                  <div className="font-bold group-hover:text-primary transition-colors line-clamp-2 break-words">
+                    {record.course.name}
+                  </div>
+                  <div className="text-[10px] text-muted-foreground uppercase tracking-wider font-medium">
+                    {record.course.code}
+                  </div>
+                  <div className="mt-2 flex items-center gap-2 md:hidden">
                     <Badge
                       variant="outline"
                       className={`font-black tabular-nums border-2 ${getAttendanceColor(record.attendance)}`}
                     >
                       {calculatePercentage(record.attendance)}%
                     </Badge>
-                  </TableCell>
-                </TableRow>
-              ))}
-            </TableBody>
-          </Table>
-        </div>
+                    <span className="text-xs text-muted-foreground tabular-nums">
+                      {record.attendance.attended} / {record.attendance.held}
+                    </span>
+                  </div>
+                </TableCell>
+                <TableCell className="hidden md:table-cell font-medium text-sm tabular-nums whitespace-nowrap">
+                  {record.attendance.attended} / {record.attendance.held}
+                </TableCell>
+                <TableCell className="hidden md:table-cell text-right px-6">
+                  <Badge
+                    variant="outline"
+                    className={`font-black tabular-nums border-2 ${getAttendanceColor(record.attendance)}`}
+                  >
+                    {calculatePercentage(record.attendance)}%
+                  </Badge>
+                </TableCell>
+              </TableRow>
+            ))}
+          </TableBody>
+        </Table>
       </CardContent>
     </Card>
   );
