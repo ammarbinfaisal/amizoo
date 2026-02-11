@@ -144,12 +144,12 @@ export default function CoursesTab() {
 }
 
 function calculatePercentage(attendance: { attended: number; held: number }) {
-  if (attendance.held === 0) return 100;
-  return Math.round((attendance.attended / attendance.held) * 100);
+  if (attendance.held === 0) return "100.00";
+  return ((attendance.attended / attendance.held) * 100).toFixed(2);
 }
 
 function getAttendanceColor(attendance: { attended: number; held: number }) {
-  const percentage = calculatePercentage(attendance);
+  const percentage = attendance.held === 0 ? 100 : (attendance.attended / attendance.held) * 100;
   if (percentage >= 75) return "text-primary border-primary";
   if (percentage >= 60) return "text-secondary-foreground border-secondary";
   return "text-destructive border-destructive";
