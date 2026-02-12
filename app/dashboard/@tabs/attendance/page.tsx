@@ -41,7 +41,7 @@ export default function AttendanceTab() {
   if (!attendance) return null;
 
   return (
-    <Card className="border-border shadow-sm py-4 md:py-6" data-attendance-screenshot-root="true">
+    <Card className="border-border shadow-sm py-4 md:py-6">
       <CardHeader className="pb-0 px-4 md:px-6">
         <div className="flex items-start justify-between gap-4">
           <div>
