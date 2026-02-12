@@ -5,7 +5,7 @@ import Link from "next/link";
 
 export default function AboutPage() {
   return (
-    <div className="space-y-8 animate-in fade-in slide-in-from-bottom-4 duration-500">
+    <div className="space-y-8 animate-in fade-in slide-in-from-bottom-4 duration-500 overflow-x-hidden">
       <div className="flex flex-col gap-2">
         <h1 className="text-4xl font-black uppercase tracking-tighter">About Amizoo</h1>
         <p className="text-muted-foreground font-medium uppercase text-[10px] tracking-[0.2em]">
@@ -47,7 +47,11 @@ export default function AboutPage() {
               We maintain a public Grafana dashboard to track the health and performance of the backend services that power Amizoo.
             </p>
             <div className="pt-2">
-              <Button asChild variant="outline" className="w-full border-2 font-bold uppercase text-[10px] tracking-widest gap-2">
+              <Button
+                asChild
+                variant="outline"
+                className="w-full border-2 font-bold uppercase text-[10px] tracking-widest gap-2 whitespace-normal h-auto min-h-10 py-3"
+              >
                 <Link href="https://grafana.ami.zoo.fullstacktics.com/d/amizone-overview/amizone-overview?orgId=1" target="_blank">
                   View Grafana Dashboard <ExternalLink className="h-3 w-3" />
                 </Link>
@@ -77,7 +81,11 @@ export default function AboutPage() {
               <p className="text-sm text-muted-foreground mb-4">
                 The modern web interface built with Next.js 15+, Tailwind CSS, and Shadcn UI.
               </p>
-              <Button asChild variant="secondary" className="w-full font-bold uppercase text-[10px] tracking-widest gap-2">
+              <Button
+                asChild
+                variant="secondary"
+                className="w-full font-bold uppercase text-[10px] tracking-widest gap-2 whitespace-normal h-auto min-h-10 py-3"
+              >
                 <Link href="https://github.com/ammarbinfaisal/amizoo" target="_blank">
                   View Source Code <ExternalLink className="h-3 w-3" />
                 </Link>
@@ -99,7 +107,11 @@ export default function AboutPage() {
               <p className="text-sm text-muted-foreground mb-4">
                 The high-performance backend API written in Go, providing a clean interface to Amizone data.
               </p>
-              <Button asChild variant="secondary" className="w-full font-bold uppercase text-[10px] tracking-widest gap-2">
+              <Button
+                asChild
+                variant="secondary"
+                className="w-full font-bold uppercase text-[10px] tracking-widest gap-2 whitespace-normal h-auto min-h-10 py-3"
+              >
                 <Link href="https://github.com/ammarbinfaisal/go-amizone" target="_blank">
                   View Source Code <ExternalLink className="h-3 w-3" />
                 </Link>
