@@ -64,7 +64,7 @@ export async function fetchFromAmizone<T>(
     if (result instanceof type.errors) {
       throw new Error(result.summary);
     }
-    return result;
+    return result as T;
   }
 
   return data;
