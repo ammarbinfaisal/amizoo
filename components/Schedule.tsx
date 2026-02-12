@@ -1,4 +1,5 @@
 import { ScheduledClasses } from "@/lib/types";
+import { cn } from "@/lib/utils";
 import { Badge } from "@/components/ui/badge";
 import { Card, CardContent } from "@/components/ui/card";
 import { Clock, MapPin, User } from "lucide-react";
@@ -20,44 +21,89 @@ export function Schedule({ schedule, date }: { schedule: ScheduledClasses; date?
 
   return (
     <div className="grid gap-3">
-      {schedule.classes.map((cls, i) => (
-        <Card
-          key={i}
-          className="overflow-hidden border-border bg-card hover:bg-secondary/5 transition-all shadow-sm"
-          noPadding
-        >
-          <CardContent className="p-0 flex flex-row h-24 sm:h-auto">
-            <div className="bg-muted w-20 sm:w-28 p-2 sm:p-6 flex flex-col items-center justify-center border-r border-border shrink-0">
-              <span className="text-xs sm:text-sm font-black text-primary leading-none mb-1 text-center">
-                {formatAmizoneTime(cls.startTime)}
-              </span>
-              <span className="text-[8px] sm:text-[10px] text-muted-foreground uppercase font-bold tracking-tighter text-center">
-                {formatClassRange(cls.startTime, cls.endTime)}
-              </span>
-            </div>
-            <div className="flex-grow p-3 sm:p-6 flex flex-col justify-center min-w-0">
-              <div className="flex justify-between items-start gap-2 mb-1 sm:mb-3">
-                <h4 className="text-xs sm:text-base font-black leading-tight text-primary uppercase tracking-tight truncate">
-                  {cls.course.name.includes(' - ') ? cls.course.name.split(' - ')[1] : cls.course.name}
-                </h4>
-                <Badge variant={getBadgeVariant(cls.attendance)} className="font-black uppercase text-[8px] sm:text-[10px] px-2 sm:px-3 py-0.5 sm:py-1 shrink-0">
-                  {cls.attendance}
-                </Badge>
+      {schedule.classes.map((cls, i) => {
+        const isCancelled = Boolean(cls.cancelled);
+        const courseName = cls.course.name.includes(" - ") ? cls.course.name.split(" - ")[1] : cls.course.name;
+
+        return (
+          <Card
+            key={i}
+            className={cn(
+              "overflow-hidden border-border bg-card hover:bg-secondary/5 transition-all shadow-sm group",
+              isCancelled && "border-destructive/40 bg-destructive/5"
+            )}
+            noPadding
+          >
+            <CardContent className="p-0 flex flex-row h-24 sm:h-auto">
+              <div
+                className={cn(
+                  "bg-muted w-20 sm:w-28 p-2 sm:p-6 flex flex-col items-center justify-center border-r border-border shrink-0",
+                  isCancelled && "bg-destructive/5 border-destructive/30"
+                )}
+              >
+                <span
+                  className={cn(
+                    "text-xs sm:text-sm font-black text-primary leading-none mb-1 text-center",
+                    isCancelled && "text-destructive"
+                  )}
+                >
+                  {formatAmizoneTime(cls.startTime)}
+                </span>
+                <span className="text-[8px] sm:text-[10px] text-muted-foreground uppercase font-bold tracking-tighter text-center">
+                  {formatClassRange(cls.startTime, cls.endTime)}
+                </span>
               </div>
-              <div className="flex flex-col sm:flex-row sm:flex-wrap gap-x-6 gap-y-1 text-[10px] sm:text-xs font-medium text-muted-foreground">
-                <div className="flex items-center gap-1.5 truncate">
-                  <User className="h-3 w-3 sm:h-3.5 sm:w-3.5 shrink-0" />
-                  <span className="truncate">{cls.faculty}</span>
+              <div className="flex-grow p-3 sm:p-6 flex flex-col justify-center min-w-0">
+                <div className="flex flex-col gap-1 sm:flex-row sm:items-start sm:justify-between sm:gap-4 mb-1 sm:mb-3">
+                  <div className="min-w-0 space-y-1">
+                    <h4
+                      className={cn(
+                        "text-xs sm:text-base font-black leading-tight text-primary uppercase tracking-tight truncate",
+                        isCancelled && "text-muted-foreground line-through decoration-1 decoration-destructive/70"
+                      )}
+                    >
+                      {courseName}
+                    </h4>
+                    {isCancelled && (
+                      <p className="text-[9px] sm:text-[10px] font-bold uppercase tracking-[0.3em] text-destructive">
+                        Cancelled
+                      </p>
+                    )}
+                  </div>
+                  <div className="flex items-center gap-2 shrink-0">
+                    {isCancelled && (
+                      <Badge variant="destructive" className="font-black uppercase text-[8px] sm:text-[10px] px-2 sm:px-3 py-0.5 sm:py-1">
+                        Cancelled
+                      </Badge>
+                    )}
+                    <Badge
+                      variant={getBadgeVariant(cls.attendance)}
+                      className="font-black uppercase text-[8px] sm:text-[10px] px-2 sm:px-3 py-0.5 sm:py-1 shrink-0"
+                    >
+                      {cls.attendance}
+                    </Badge>
+                  </div>
                 </div>
-                <div className="flex items-center gap-1.5 shrink-0">
-                  <MapPin className="h-3 w-3 sm:h-3.5 sm:w-3.5 shrink-0" />
-                  <span>{cls.room}</span>
+                <div className="flex flex-col sm:flex-row sm:flex-wrap gap-x-6 gap-y-1 text-[10px] sm:text-xs font-medium text-muted-foreground">
+                  <div className="flex items-center gap-1.5 truncate">
+                    <User className="h-3 w-3 sm:h-3.5 sm:w-3.5 shrink-0" />
+                    <span className="truncate">{cls.faculty}</span>
+                  </div>
+                  <div className="flex items-center gap-1.5 shrink-0">
+                    <MapPin className="h-3 w-3 sm:h-3.5 sm:w-3.5 shrink-0" />
+                    <span>{cls.room}</span>
+                  </div>
                 </div>
+                {isCancelled && (
+                  <p className="mt-3 text-[9px] sm:text-[10px] font-bold uppercase tracking-widest text-destructive/80">
+                    This slot is marked as cancelled—check with faculty for updates.
+                  </p>
+                )}
               </div>
-            </div>
-          </CardContent>
-        </Card>
-      ))}
+            </CardContent>
+          </Card>
+        );
+      })}
     </div>
   );
 }

@@ -29,6 +29,7 @@ export interface ScheduledClass {
   faculty: string;
   room: string;
   attendance: AttendanceState;
+  cancelled?: boolean;
 }
 
 export enum AttendanceState {
