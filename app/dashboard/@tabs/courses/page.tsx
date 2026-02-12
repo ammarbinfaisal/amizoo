@@ -57,7 +57,7 @@ export default function CoursesTab() {
 
   return (
     <div className="space-y-6">
-      <Card className="border-border shadow-sm py-6">
+      <Card className="border-border shadow-sm">
         <CardHeader className="pb-4">
           <CardTitle className="text-sm font-black uppercase tracking-widest">Semester</CardTitle>
           <CardDescription>Switch semesters to view older courses.</CardDescription>

@@ -9,7 +9,7 @@ export function Schedule({ schedule, date }: { schedule: ScheduledClasses; date?
   if (schedule.classes.length === 0) {
     const dateStr = date ? format(date, "EEEE, MMM d") : "today";
     return (
-      <Card className="border-dashed">
+      <Card className="border-dashed" noPadding>
         <CardContent className="flex flex-col items-center justify-center p-12 text-center">
           <Clock className="h-8 w-8 text-muted-foreground mb-4 opacity-20" />
           <p className="text-muted-foreground font-medium">No classes scheduled for {dateStr}.</p>
@@ -21,7 +21,11 @@ export function Schedule({ schedule, date }: { schedule: ScheduledClasses; date?
   return (
     <div className="grid gap-3">
       {schedule.classes.map((cls, i) => (
-        <Card key={i} className="overflow-hidden border-border bg-card hover:bg-secondary/5 transition-all shadow-sm">
+        <Card
+          key={i}
+          className="overflow-hidden border-border bg-card hover:bg-secondary/5 transition-all shadow-sm"
+          noPadding
+        >
           <CardContent className="p-0 flex flex-row h-24 sm:h-auto">
             <div className="bg-muted w-20 sm:w-28 p-2 sm:p-6 flex flex-col items-center justify-center border-r border-border shrink-0">
               <span className="text-xs sm:text-sm font-black text-primary leading-none mb-1 text-center">
