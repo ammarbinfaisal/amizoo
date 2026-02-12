@@ -12,7 +12,7 @@ import {
   Award,
   Wifi,
   MessageSquareText,
-  LayoutDashboard
+  Info
 } from "lucide-react";
 
 const navItems = [
@@ -23,6 +23,7 @@ const navItems = [
   { label: "Results", href: "/dashboard/results", icon: Award },
   { label: "Wi-Fi", href: "/dashboard/wifi", icon: Wifi },
   { label: "Feedback", href: "/dashboard/feedback", icon: MessageSquareText },
+  { label: "About", href: "/dashboard/about", icon: Info },
 ];
 
 export function DesktopNav() {

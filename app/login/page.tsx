@@ -3,7 +3,7 @@
 import { useState, useEffect } from "react";
 import { useRouter } from "next/navigation";
 import { useForm } from "react-hook-form";
-import { zodResolver } from "@hookform/resolvers/zod";
+import { arktypeResolver } from "@hookform/resolvers/arktype";
 import { loginSchema, LoginFormValues } from "@/lib/schemas";
 import { toast } from "sonner";
 
@@ -24,7 +24,7 @@ export default function LoginPage() {
   const router = useRouter();
 
   const form = useForm<LoginFormValues>({
-    resolver: zodResolver(loginSchema),
+    resolver: arktypeResolver(loginSchema),
     defaultValues: {
       username: "",
       password: "",

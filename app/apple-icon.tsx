@@ -3,8 +3,8 @@ import { ImageResponse } from "next/og";
 export const runtime = "edge";
 
 export const size = {
-  width: 512,
-  height: 512,
+  width: 180,
+  height: 180,
 };
 export const contentType = "image/png";
 
@@ -19,29 +19,18 @@ export default function Icon() {
           display: "flex",
           alignItems: "center",
           justifyContent: "center",
-          borderRadius: "20%",
-          padding: "40px",
         }}
       >
         <div
           style={{
-            display: "flex",
-            flexDirection: "column",
-            alignItems: "center",
-            justifyContent: "center",
+            fontSize: 100,
+            color: "#FAFAFA",
+            fontWeight: 900,
+            lineHeight: 1,
+            letterSpacing: "-0.05em",
           }}
         >
-          <div
-            style={{
-              fontSize: 280,
-              color: "#FAFAFA",
-              fontWeight: 900,
-              lineHeight: 1,
-              letterSpacing: "-0.05em",
-            }}
-          >
-            Az
-          </div>
+          Az
         </div>
       </div>
     ),

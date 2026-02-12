@@ -1,8 +1,8 @@
-import { z } from "zod";
+import { type } from "arktype";
 
-export const loginSchema = z.object({
-  username: z.string().min(1, "Username is required"),
-  password: z.string().min(1, "Password is required"),
+export const loginSchema = type({
+  username: "string > 0",
+  password: "string > 0",
 });
 
-export type LoginFormValues = z.infer<typeof loginSchema>;
+export type LoginFormValues = typeof loginSchema.infer;

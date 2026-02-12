@@ -107,7 +107,7 @@ export default function ResultsTab() {
                 <Table>
                   <TableHeader>
                     <TableRow className="hover:bg-transparent border-b">
-                      <TableHead className="font-bold uppercase text-[10px] tracking-widest px-6">Semester</TableHead>
+                      <TableHead className="font-bold uppercase text-[10px] tracking-widest px-4 md:px-6">Semester</TableHead>
                       <TableHead className="font-bold uppercase text-[10px] tracking-widest">SGPA</TableHead>
                       <TableHead className="font-bold uppercase text-[10px] tracking-widest">CGPA</TableHead>
                     </TableRow>
@@ -115,7 +115,7 @@ export default function ResultsTab() {
                   <TableBody>
                     {data.overall.map((row) => (
                       <TableRow key={row.semester.semesterRef}>
-                        <TableCell className="px-6 py-4 font-bold">{row.semester.semesterRef}</TableCell>
+                        <TableCell className="px-4 py-4 md:px-6 font-bold">{row.semester.semesterRef}</TableCell>
                         <TableCell className="py-4 font-medium tabular-nums">{row.semesterGradePointAverage.toFixed(2)}</TableCell>
                         <TableCell className="py-4 font-medium tabular-nums">{row.cumulativeGradePointAverage.toFixed(2)}</TableCell>
                       </TableRow>
@@ -132,41 +132,50 @@ export default function ResultsTab() {
                 <CardTitle className="text-xl font-black uppercase tracking-tight">Course Results</CardTitle>
               </CardHeader>
               <CardContent className="p-0 pt-6">
-                <div className="overflow-x-auto">
-                    <Table>
-                    <TableHeader>
-                        <TableRow className="hover:bg-transparent border-b">
-                        <TableHead className="w-[45%] min-w-[200px] font-bold uppercase text-[10px] tracking-widest px-6">Course</TableHead>
-                        <TableHead className="font-bold uppercase text-[10px] tracking-widest">Grade</TableHead>
-                        <TableHead className="font-bold uppercase text-[10px] tracking-widest">Points</TableHead>
-                        <TableHead className="font-bold uppercase text-[10px] tracking-widest">Credits</TableHead>
-                        <TableHead className="font-bold uppercase text-[10px] tracking-widest px-6 text-right">Date</TableHead>
-                        </TableRow>
-                    </TableHeader>
-                    <TableBody>
-                        {data.courseWise.map((r) => (
-                        <TableRow key={r.course.code} className="group transition-colors">
-                            <TableCell className="px-6 py-4">
-                            <div className="font-bold group-hover:text-primary transition-colors line-clamp-1">{r.course.name}</div>
-                            <div className="text-[10px] text-muted-foreground uppercase tracking-wider font-medium">{r.course.code}</div>
-                            </TableCell>
-                            <TableCell className="py-4">
-                            <Badge variant="outline" className="font-black tabular-nums border-2 whitespace-nowrap">
-                                {r.score.grade} ({r.score.gradePoint})
+                <Table className="table-fixed md:table-auto">
+                  <TableHeader>
+                    <TableRow className="hover:bg-transparent border-b">
+                      <TableHead className="w-full md:w-[45%] font-bold uppercase text-[10px] tracking-widest px-4 md:px-6">Course</TableHead>
+                      <TableHead className="hidden md:table-cell font-bold uppercase text-[10px] tracking-widest">Grade</TableHead>
+                      <TableHead className="hidden md:table-cell font-bold uppercase text-[10px] tracking-widest">Points</TableHead>
+                      <TableHead className="hidden md:table-cell font-bold uppercase text-[10px] tracking-widest">Credits</TableHead>
+                      <TableHead className="hidden md:table-cell font-bold uppercase text-[10px] tracking-widest px-6 text-right">Date</TableHead>
+                    </TableRow>
+                  </TableHeader>
+                  <TableBody>
+                    {data.courseWise.map((r) => (
+                      <TableRow key={r.course.code} className="group transition-colors">
+                        <TableCell className="px-4 py-3 md:px-6 md:py-4 whitespace-normal align-top">
+                          <div className="font-bold group-hover:text-primary transition-colors line-clamp-2 break-words">{r.course.name}</div>
+                          <div className="text-[10px] text-muted-foreground uppercase tracking-wider font-medium">{r.course.code}</div>
+                          <div className="mt-2 flex flex-wrap items-center gap-2 md:hidden">
+                            <Badge variant="outline" className="font-black tabular-nums border-2 whitespace-nowrap text-[10px]">
+                              {r.score.grade} ({r.score.gradePoint})
                             </Badge>
-                            </TableCell>
-                            <TableCell className="py-4 font-medium tabular-nums">{r.credits.points}</TableCell>
-                            <TableCell className="py-4 font-medium tabular-nums whitespace-nowrap">
-                            {r.credits.acquired}/{r.credits.effective}
-                            </TableCell>
-                            <TableCell className="px-6 py-4 text-right text-[10px] font-bold uppercase tracking-wider text-muted-foreground whitespace-nowrap">
-                            {formatTypeDate(r.publishDate)}
-                            </TableCell>
-                        </TableRow>
-                        ))}
-                    </TableBody>
-                    </Table>
-                </div>
+                            <span className="text-[10px] font-bold text-muted-foreground uppercase">
+                              {r.credits.points} pts • {r.credits.acquired}/{r.credits.effective} cr
+                            </span>
+                            <span className="text-[10px] font-bold text-muted-foreground uppercase ml-auto">
+                              {formatTypeDate(r.publishDate)}
+                            </span>
+                          </div>
+                        </TableCell>
+                        <TableCell className="hidden md:table-cell py-4">
+                          <Badge variant="outline" className="font-black tabular-nums border-2 whitespace-nowrap">
+                            {r.score.grade} ({r.score.gradePoint})
+                          </Badge>
+                        </TableCell>
+                        <TableCell className="hidden md:table-cell py-4 font-medium tabular-nums">{r.credits.points}</TableCell>
+                        <TableCell className="hidden md:table-cell py-4 font-medium tabular-nums whitespace-nowrap">
+                          {r.credits.acquired}/{r.credits.effective}
+                        </TableCell>
+                        <TableCell className="hidden md:table-cell px-6 py-4 text-right text-[10px] font-bold uppercase tracking-wider text-muted-foreground whitespace-nowrap">
+                          {formatTypeDate(r.publishDate)}
+                        </TableCell>
+                      </TableRow>
+                    ))}
+                  </TableBody>
+                </Table>
               </CardContent>
             </Card>
           ) : (

@@ -11,7 +11,7 @@ import {
   WifiInfo,
   WifiMacInfo,
 } from "./types";
-import { z } from "zod";
+import { type, Type } from "arktype";
 
 const rawApiUrl = process.env.NEXT_PUBLIC_AMIZONE_API_URL || "https://api.ami.zoo.fullstacktics.com";
 const API_URL = rawApiUrl.startsWith("http") ? rawApiUrl : `https://${rawApiUrl}`;
@@ -32,7 +32,7 @@ export function getLocalCredentials(): Credentials | null {
 export async function fetchFromAmizone<T>(
   endpoint: string,
   credentials?: Credentials,
-  schema?: z.ZodType<T>,
+  schema?: Type<T>,
   init?: Omit<RequestInit, "headers"> & { headers?: Record<string, string> }
 ): Promise<T> {
   const creds = credentials || getLocalCredentials();
@@ -60,7 +60,11 @@ export async function fetchFromAmizone<T>(
   const data = await response.json();
   
   if (schema) {
-    return schema.parse(data);
+    const result = schema(data);
+    if (result instanceof type.errors) {
+      throw new Error(result.summary);
+    }
+    return result;
   }
 
   return data;

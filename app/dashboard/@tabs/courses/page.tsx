@@ -98,15 +98,15 @@ export default function CoursesTab() {
       </Card>
 
       {error ? (
-        <Card className="border-destructive/20 bg-destructive/5 py-6 p-12 text-center">
+        <Card className="border-destructive/20 bg-destructive/5 py-4 md:py-6 p-8 md:p-12 text-center">
             <p className="text-destructive font-bold mb-4">{error}</p>
             <Button onClick={() => fetchData(semesterRef)} variant="outline">Retry</Button>
         </Card>
       ) : courses && (
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4 sm:gap-6">
           {courses.courses.map((course) => (
-            <Card key={course.ref.code} className="group border-border hover:border-secondary transition-all shadow-sm py-6">
-              <CardHeader className="p-4 sm:p-6">
+            <Card key={course.ref.code} className="group border-border hover:border-secondary transition-all shadow-sm py-4 md:py-6">
+              <CardHeader className="p-4 md:p-6">
                 <CardTitle className="text-base sm:text-lg font-bold group-hover:text-secondary-foreground transition-colors leading-tight line-clamp-2">
                   {course.ref.name}
                 </CardTitle>
@@ -114,9 +114,9 @@ export default function CoursesTab() {
                   {course.type}
                 </CardDescription>
               </CardHeader>
-              <CardContent className="p-4 sm:p-6 pt-0">
-                <Separator className="mb-4 bg-border/50" />
-                <div className="space-y-3">
+              <CardContent className="p-4 md:p-6 pt-0">
+                <Separator className="mb-3 md:mb-4 bg-border/50" />
+                <div className="space-y-2 md:space-y-3">
                   <div className="flex justify-between items-center text-[10px] font-black uppercase tracking-widest">
                     <span className="opacity-60">Attendance</span>
                     <span className={getAttendanceColor(course.attendance)}>
@@ -130,7 +130,7 @@ export default function CoursesTab() {
                     </span>
                   </div>
                 </div>
-                <Separator className="my-4 bg-border/50" />
+                <Separator className="my-3 md:my-4 bg-border/50" />
                 <div className="flex justify-between items-center text-[10px] font-black uppercase tracking-widest opacity-60">
                   <span>{course.ref.code}</span>
                 </div>
