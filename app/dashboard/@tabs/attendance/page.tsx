@@ -7,6 +7,7 @@ import { Badge } from "@/components/ui/badge";
 import { Skeleton } from "@/components/ui/skeleton";
 import { RefreshCw } from "lucide-react";
 import { Button } from "@/components/ui/button";
+import { AttendanceScreenshotButton } from "@/components/AttendanceScreenshotButton";
 
 export default function AttendanceTab() {
   const { attendance, loading, error, refresh } = useDashboard();
@@ -42,8 +43,35 @@ export default function AttendanceTab() {
   return (
     <Card className="border-border shadow-sm py-4 md:py-6">
       <CardHeader className="pb-0 px-4 md:px-6">
-        <CardTitle className="text-lg md:text-xl font-black uppercase tracking-tight">Attendance Breakdown</CardTitle>
-        <CardDescription>Detailed statistics per course for current semester</CardDescription>
+        <div className="flex items-start justify-between gap-4">
+          <div>
+            <CardTitle className="text-lg md:text-xl font-black uppercase tracking-tight">Attendance Breakdown</CardTitle>
+            <CardDescription>Detailed statistics per course for current semester</CardDescription>
+          </div>
+          <div className="flex items-center gap-2 shrink-0">
+            <AttendanceScreenshotButton />
+
+            <Button
+              variant="outline"
+              size="icon"
+              className="md:hidden h-9 w-9"
+              onClick={refresh}
+              disabled={loading}
+            >
+              <RefreshCw className={loading ? "animate-spin" : ""} size={16} />
+            </Button>
+            <Button
+              variant="outline"
+              size="sm"
+              className="hidden md:flex font-black uppercase text-[10px] tracking-widest h-9"
+              onClick={refresh}
+              disabled={loading}
+            >
+              <RefreshCw className={loading ? "animate-spin mr-2" : "mr-2"} size={14} />
+              Refresh
+            </Button>
+          </div>
+        </div>
       </CardHeader>
       <CardContent className="p-0 pt-4 md:pt-6">
         <Table className="table-fixed md:table-auto">
