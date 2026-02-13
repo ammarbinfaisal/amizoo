@@ -7,7 +7,6 @@ import { Badge } from "@/components/ui/badge";
 import { Skeleton } from "@/components/ui/skeleton";
 import { RefreshCw } from "lucide-react";
 import { Button } from "@/components/ui/button";
-import { AttendanceScreenshotButton } from "@/components/AttendanceScreenshotButton";
 
 export default function AttendanceTab() {
   const { attendance, loading, error, refresh } = useDashboard();
@@ -49,8 +48,6 @@ export default function AttendanceTab() {
             <CardDescription>Detailed statistics per course for current semester</CardDescription>
           </div>
           <div className="flex items-center gap-2 shrink-0">
-            <AttendanceScreenshotButton />
-
             <Button
               variant="outline"
               size="icon"

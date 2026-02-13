@@ -7,8 +7,9 @@ import { Schedule } from "@/components/Schedule";
 import { DateSelector } from "@/components/DateSelector";
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
-import { RefreshCw, Calendar as CalendarIcon } from "lucide-react";
+import { RefreshCw } from "lucide-react";
 import { Skeleton } from "@/components/ui/skeleton";
+import { ScheduleScreenshotButton } from "@/components/ScheduleScreenshotButton";
 
 export default function ScheduleTab() {
   const [date, setDate] = useState<Date>(new Date());
@@ -42,7 +43,8 @@ export default function ScheduleTab() {
     <div className="space-y-4">
       <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4">
         <h2 className="text-xl font-black uppercase tracking-tight">Class Schedule</h2>
-        <div className="w-full flex justify-end sm:w-auto">
+        <div className="w-full flex justify-end sm:w-auto gap-2 items-center">
+          <ScheduleScreenshotButton date={date} schedule={schedule} disabled={loading} />
           <DateSelector date={date} onChange={setDate} />
         </div>
       </div>

@@ -2,8 +2,8 @@
 
 import { useEffect, useState, useCallback } from "react";
 import { amizoneApi, getLocalCredentials } from "@/lib/api";
-import { ExaminationSchedule, CourseRef } from "@/lib/types";
-import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card";
+import { CourseRef } from "@/lib/types";
+import { Card, CardContent } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { FileText, RefreshCw } from "lucide-react";
 import { Skeleton } from "@/components/ui/skeleton";
@@ -60,7 +60,11 @@ export default function ExamsTab() {
         </Button>
       </div>
 
-      {exams.length > 0 ? (
+      {error ? (
+        <Card className="border-destructive/20 bg-destructive/5">
+          <CardContent className="p-6 text-center text-sm text-destructive font-bold">{error}</CardContent>
+        </Card>
+      ) : exams.length > 0 ? (
         <div className="grid gap-3 sm:gap-4">
           {exams.map((exam, i) => (
             <Card key={i} className="overflow-hidden border-border bg-card shadow-sm">
@@ -96,7 +100,7 @@ export default function ExamsTab() {
 
 function normalizeExamItems(raw: unknown): NormalizedExamItem[] {
   if (!raw || typeof raw !== "object") return [];
-  const examsValue = (raw as any).exams;
+  const examsValue = (raw as { exams?: unknown }).exams;
   if (!Array.isArray(examsValue)) return [];
 
   const items: NormalizedExamItem[] = [];

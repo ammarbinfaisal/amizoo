@@ -112,24 +112,4 @@ export const amizoneApi = {
         body: JSON.stringify(payload),
       }
     ),
-  getAttendanceScreenshot: async (creds?: Credentials): Promise<Blob> => {
-    const lcreds = creds || getLocalCredentials();
-    if (!lcreds) throw new Error("No credentials provided");
-    const auth = btoa(`${lcreds.username}:${lcreds.password}`);
-    const response = await fetch(`${API_URL}/api/v1/attendance/screenshot`, {
-      headers: { Authorization: `Basic ${auth}` },
-    });
-
-    if (!response.ok) {
-      if (response.status === 429) {
-        const body = await response.json().catch(() => ({}));
-        throw new Error(body.error || `Rate limited. Retry after ${body.retry_after_seconds}s`);
-      }
-      if (response.status === 401) throw new Error("Invalid credentials");
-      const message = await response.text().catch(() => "");
-      throw new Error(message || `API error: ${response.statusText}`);
-    }
-
-    return response.blob();
-  },
 };
