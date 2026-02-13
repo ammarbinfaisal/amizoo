@@ -44,6 +44,26 @@ export default function ScheduleTab() {
       <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4">
         <h2 className="text-xl font-black uppercase tracking-tight">Class Schedule</h2>
         <div className="w-full flex justify-end sm:w-auto gap-2 items-center">
+          <Button
+            variant="outline"
+            size="icon"
+            className="md:hidden h-9 w-9"
+            onClick={() => fetchSchedule(date)}
+            disabled={loading}
+            title="Refresh schedule"
+          >
+            <RefreshCw className={loading ? "animate-spin" : ""} size={16} />
+          </Button>
+          <Button
+            variant="outline"
+            size="sm"
+            className="hidden md:flex font-black uppercase text-[10px] tracking-widest h-9"
+            onClick={() => fetchSchedule(date)}
+            disabled={loading}
+          >
+            <RefreshCw className={loading ? "animate-spin mr-2" : "mr-2"} size={14} />
+            Refresh
+          </Button>
           <ScheduleScreenshotButton date={date} schedule={schedule} disabled={loading} />
           <DateSelector date={date} onChange={setDate} />
         </div>

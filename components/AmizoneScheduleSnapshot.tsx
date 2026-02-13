@@ -27,6 +27,11 @@ export function AmizoneScheduleSnapshot({ date, schedule }: { date: Date; schedu
           color: #333;
         }
 
+        .amizone-schedule-snapshot,
+        .amizone-schedule-snapshot * {
+          border-color: #dddddd;
+        }
+
         /* Bootstrap-ish panel framing (matches the Amizone widget look in the reference). */
         .amizone-schedule-snapshot .panel {
           margin: 0;

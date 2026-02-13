@@ -51,67 +51,67 @@
   --radius: 0.375rem;
 
   /* Beige/Burlywood Theme: Beige (60), Burlywood (30), Black (10) */
-  --background: oklch(0.98 0.01 95);     /* Light Beige */
-  --foreground: oklch(0.15 0 0);        /* Black */
+  --background: #faf8f1;     /* Light Beige */
+  --foreground: #0b0b0b;     /* Black */
 
-  --card: oklch(0.99 0.005 95);         /* Very Light Beige */
-  --card-foreground: oklch(0.15 0 0);   /* Black */
-  --popover: oklch(0.99 0.005 95);      /* Very Light Beige */
-  --popover-foreground: oklch(0.15 0 0);/* Black */
+  --card: #fdfcf8;          /* Very Light Beige */
+  --card-foreground: #0b0b0b; /* Black */
+  --popover: #fdfcf8;       /* Very Light Beige */
+  --popover-foreground: #0b0b0b; /* Black */
 
-  --secondary: oklch(0.82 0.08 75);     /* Burlywood */
-  --secondary-foreground: oklch(0.15 0 0); /* Black */
+  --secondary: #e3bd8a;     /* Burlywood */
+  --secondary-foreground: #0b0b0b; /* Black */
 
-  --muted: oklch(0.94 0.02 90);         /* Soft Beige/Burlywood */
-  --muted-foreground: oklch(0.4 0.02 75); /* Dark Burlywood/Gray */
+  --muted: #f0ebdc;         /* Soft Beige/Burlywood */
+  --muted-foreground: #4e463c; /* Dark Burlywood/Gray */
 
-  --border: oklch(0.88 0.03 85);        /* Burlywood-tinted gray */
-  --input: oklch(0.88 0.03 85);         /* Burlywood-tinted gray */
+  --border: #e1d6c2;        /* Burlywood-tinted gray */
+  --input: #e1d6c2;         /* Burlywood-tinted gray */
 
-  --primary: oklch(0.15 0 0);           /* Black */
-  --primary-foreground: oklch(0.98 0.01 95); /* Beige */
+  --primary: #0b0b0b;       /* Black */
+  --primary-foreground: #faf8f1; /* Beige */
 
-  --accent: oklch(0.82 0.08 75);        /* Burlywood */
-  --accent-foreground: oklch(0.15 0 0); /* Black */
+  --accent: #e3bd8a;        /* Burlywood */
+  --accent-foreground: #0b0b0b; /* Black */
 
-  --ring: oklch(0.15 0 0);              /* Black */
+  --ring: #0b0b0b;          /* Black */
 
-  --destructive: oklch(0.4 0.05 20);    /* Dark Reddish/Gray for errors */
-  --chart-1: oklch(0.15 0 0);
-  --chart-2: oklch(0.82 0.08 75);
-  --chart-3: oklch(0.4 0.05 20);
-  --chart-4: oklch(0.6 0.05 75);
-  --chart-5: oklch(0.7 0.05 85);
+  --destructive: #603d3c; /* Dark Reddish/Gray for errors */
+  --chart-1: #0b0b0b;
+  --chart-2: #e3bd8a;
+  --chart-3: #603d3c;
+  --chart-4: #927c5f;
+  --chart-5: #ad9d7b;
 }
 
 .dark {
   /* Monochrome Dark Theme: Black, Dark-Gray, Gray, White */
-  --background: oklch(0.12 0 0);        /* Very Dark */
-  --foreground: oklch(0.98 0.01 95);     /* Beige Text */
+  --background: #060606;        /* Very Dark */
+  --foreground: #faf8f1;        /* Beige Text */
 
-  --card: oklch(0.18 0.01 95);          /* Dark Gray-Beige */
-  --card-foreground: oklch(0.98 0.01 95);/* Beige */
-  --popover: oklch(0.18 0.01 95);       /* Dark Gray-Beige */
-  --popover-foreground: oklch(0.98 0.01 95);/* Beige */
+  --card: #13120d;          /* Dark Gray-Beige */
+  --card-foreground: #faf8f1; /* Beige */
+  --popover: #13120d;       /* Dark Gray-Beige */
+  --popover-foreground: #faf8f1; /* Beige */
 
-  --secondary: oklch(0.4 0.05 75);      /* Dimmed Burlywood */
-  --secondary-foreground: oklch(0.98 0.01 95); /* Beige */
+  --secondary: #584428;      /* Dimmed Burlywood */
+  --secondary-foreground: #faf8f1; /* Beige */
 
-  --muted: oklch(0.25 0.02 95);         /* Very Dark Beige */
-  --muted-foreground: oklch(0.7 0.02 95);  /* Light Beige-Gray */
+  --muted: #252217;         /* Very Dark Beige */
+  --muted-foreground: #a29f91;  /* Light Beige-Gray */
 
-  --border: oklch(0.3 0.02 95);         /* Dark Beige Border */
-  --input: oklch(0.3 0.02 95);          /* Dark Beige Border */
+  --border: #312e22;         /* Dark Beige Border */
+  --input: #312e22;          /* Dark Beige Border */
 
-  --primary: oklch(0.98 0.01 95);       /* Beige */
-  --primary-foreground: oklch(0.15 0 0);/* Black */
+  --primary: #faf8f1;       /* Beige */
+  --primary-foreground: #0b0b0b; /* Black */
 
-  --accent: oklch(0.35 0.02 95);        /* Dark Beige Accent */
-  --accent-foreground: oklch(0.98 0.01 95); /* Beige */
+  --accent: #3e3b2f;        /* Dark Beige Accent */
+  --accent-foreground: #faf8f1; /* Beige */
 
-  --ring: oklch(0.98 0.01 95);          /* Beige */
+  --ring: #faf8f1;          /* Beige */
 
-  --destructive: oklch(0.7 0.05 20);    /* Light Reddish/Gray */
+  --destructive: #bc9392;    /* Light Reddish/Gray */
 }
 
 @layer base {

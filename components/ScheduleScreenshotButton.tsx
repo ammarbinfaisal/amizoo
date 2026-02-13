@@ -93,6 +93,8 @@ export function ScheduleScreenshotButton({
             width: 1148,
             pointerEvents: "none",
             background: "#ffffff",
+            borderColor: "#dddddd",
+            color: "#333333",
           }}
         >
           <AmizoneScheduleSnapshot date={date} schedule={schedule} />
@@ -101,4 +103,3 @@ export function ScheduleScreenshotButton({
     </>
   );
 }
-
