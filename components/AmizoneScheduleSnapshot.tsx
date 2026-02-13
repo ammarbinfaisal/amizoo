@@ -3,10 +3,23 @@
 import { ScheduledClasses } from "@/lib/types";
 import { format } from "date-fns";
 
-function formatRange(startIso: string, endIso: string) {
+function formatTimeParts(startIso: string, endIso: string) {
   const start = new Date(startIso);
   const end = new Date(endIso);
-  return `${format(start, "HH:mm")} \u2013 ${format(end, "HH:mm")}`;
+  return { start: format(start, "HH:mm"), end: format(end, "HH:mm") };
+}
+
+function attendanceDotColor(attendance: string) {
+  switch (attendance) {
+    case "PRESENT":
+      return "#5cb85c";
+    case "ABSENT":
+      return "#d9534f";
+    case "PENDING":
+      return "#337ab7";
+    default:
+      return "#337ab7";
+  }
 }
 
 export function AmizoneScheduleSnapshot({ date, schedule }: { date: Date; schedule: ScheduledClasses }) {
@@ -36,23 +49,23 @@ export function AmizoneScheduleSnapshot({ date, schedule }: { date: Date; schedu
         .amizone-schedule-snapshot .panel {
           margin: 0;
           background: #fff;
-          border: 1px solid #dddddd;
+          border: 1px solid #bce8f1;
           border-radius: 4px;
           overflow: hidden;
         }
         .amizone-schedule-snapshot .panel-heading {
-          padding: 18px 22px;
+          padding: 16px 20px;
           border-bottom: 1px solid #dddddd;
           background: #f5f5f5;
         }
         .amizone-schedule-snapshot .panel-title {
           margin: 0;
-          font-size: 32px;
+          font-size: 28px;
           font-weight: 700;
           color: #2c3e50;
         }
         .amizone-schedule-snapshot .panel-body {
-          padding: 18px 22px 24px;
+          padding: 16px 20px 22px;
         }
 
         .amizone-schedule-snapshot .toolbarRow {
@@ -66,12 +79,12 @@ export function AmizoneScheduleSnapshot({ date, schedule }: { date: Date; schedu
           display: inline-flex;
           align-items: center;
           justify-content: center;
-          width: 44px;
-          height: 38px;
-          border: 1px solid #d8d8d8;
-          background: #ffffff;
-          color: #2b7a97;
-          border-radius: 2px;
+          width: 46px;
+          height: 34px;
+          border: 1px solid #cccccc;
+          background: linear-gradient(to bottom, #ffffff 0%, #e0e0e0 100%);
+          color: #337ab7;
+          border-radius: 0;
           font-size: 18px;
           line-height: 1;
           user-select: none;
@@ -83,13 +96,13 @@ export function AmizoneScheduleSnapshot({ date, schedule }: { date: Date; schedu
         }
         .amizone-schedule-snapshot .btnGroup {
           display: inline-flex;
-          gap: 8px;
+          gap: 10px;
         }
         .amizone-schedule-snapshot .dateTitle {
           text-align: center;
-          font-size: 34px;
-          font-weight: 500;
-          color: #111827;
+          font-size: 32px;
+          font-weight: 700;
+          color: #000000;
         }
 
         /* FullCalendar list-view essentials (derived from style_analyser.json). */
@@ -107,6 +120,7 @@ export function AmizoneScheduleSnapshot({ date, schedule }: { date: Date; schedu
         }
         .amizone-schedule-snapshot .fc .fc-list-table {
           table-layout: auto;
+          border: 1px solid #dddddd;
         }
         .amizone-schedule-snapshot .fc th,
         .amizone-schedule-snapshot .fc td {
@@ -118,27 +132,40 @@ export function AmizoneScheduleSnapshot({ date, schedule }: { date: Date; schedu
         }
         .amizone-schedule-snapshot .fc-list-table td {
           border-width: 1px 0 0;
-          padding: 8px 14px;
+          padding: 12px 14px;
         }
         .amizone-schedule-snapshot .fc-list-heading {
           border-bottom-width: 1px;
         }
         .amizone-schedule-snapshot .fc-list-heading td {
-          font-size: 22px;
+          font-size: 20px;
           font-weight: 700;
-          color: #111827;
-          padding: 14px 14px 10px;
+          color: #000000;
+          padding: 12px 14px;
           background: #ffffff;
         }
         .amizone-schedule-snapshot .fc-list-item-time {
           white-space: normal !important;
-          color: rgb(16, 120, 149);
-          width: 1px;
+          color: #31708f;
+          width: 86px;
           white-space: nowrap;
+        }
+        .amizone-schedule-snapshot .fc-timeStack {
+          display: grid;
+          grid-template-rows: auto auto auto;
+          justify-items: center;
+          align-content: center;
+          gap: 2px;
+          line-height: 1.05;
+          font-size: 18px;
+        }
+        .amizone-schedule-snapshot .fc-timeSep {
+          font-size: 18px;
+          line-height: 1;
         }
         .amizone-schedule-snapshot .fc-list-item-marker {
           white-space: normal !important;
-          width: 1px;
+          width: 34px;
           white-space: nowrap;
         }
         .amizone-schedule-snapshot .fc-ltr .fc-list-item-marker {
@@ -146,13 +173,16 @@ export function AmizoneScheduleSnapshot({ date, schedule }: { date: Date; schedu
         }
         .amizone-schedule-snapshot .fc-event-dot {
           display: inline-block;
-          width: 10px;
-          height: 10px;
-          border-radius: 5px;
-          background-color: rgb(58, 135, 173);
+          width: 12px;
+          height: 12px;
+          border-radius: 50%;
+          border: 1px solid rgba(0, 0, 0, 0.12);
+          background-color: #337ab7;
         }
         .amizone-schedule-snapshot .fc-list-item-title {
-          color: rgb(92, 0, 108);
+          color: #5c006c;
+          font-size: 18px;
+          font-weight: 400;
         }
         .amizone-schedule-snapshot .fc-list-item-title a {
           text-decoration: none;
@@ -167,20 +197,24 @@ export function AmizoneScheduleSnapshot({ date, schedule }: { date: Date; schedu
           border-color: rgb(165, 236, 251) !important;
         }
         .amizone-schedule-snapshot .fc-list-item.class-schedule-color .fc-list-item-time {
-          color: rgb(16, 120, 149);
+          color: #31708f;
         }
 
         .amizone-schedule-snapshot .titleLines {
-          margin-top: 6px;
+          margin-top: 4px;
           display: grid;
           gap: 4px;
           font-size: 18px;
-          line-height: 1.2;
+          line-height: 1.25;
           font-weight: 400;
         }
-        .amizone-schedule-snapshot .titleLines .small {
-          font-size: 17px;
-          font-weight: 500;
+        .amizone-schedule-snapshot .titleLines .faculty {
+          color: #000000;
+          font-weight: 700;
+        }
+        .amizone-schedule-snapshot .titleLines .room {
+          color: #5c006c;
+          font-weight: 400;
         }
         .amizone-schedule-snapshot .StrikeOutClass td {
           opacity: 0.75;
@@ -236,23 +270,31 @@ export function AmizoneScheduleSnapshot({ date, schedule }: { date: Date; schedu
                       classes.map((cls, idx) => {
                         const isCancelled = Boolean(cls.cancelled);
                         const courseName = cls.course.name.includes(" - ") ? cls.course.name.split(" - ")[1] : cls.course.name;
+                        const { start, end } = formatTimeParts(cls.startTime, cls.endTime);
+                        const dot = attendanceDotColor(cls.attendance);
 
                         return (
                           <tr
                             key={`${cls.startTime}-${cls.endTime}-${idx}`}
                             className={`fc-list-item class-schedule-color ${isCancelled ? "StrikeOutClass" : ""}`}
                           >
-                            <td className="fc-list-item-time fc-widget-content">{formatRange(cls.startTime, cls.endTime)}</td>
+                            <td className="fc-list-item-time fc-widget-content">
+                              <div className="fc-timeStack" aria-hidden>
+                                <div>{start}</div>
+                                <div className="fc-timeSep">-</div>
+                                <div>{end}</div>
+                              </div>
+                            </td>
                             <td className="fc-list-item-marker fc-widget-content">
-                              <span className="fc-event-dot" />
+                              <span className="fc-event-dot" style={{ backgroundColor: dot }} />
                             </td>
                             <td className="fc-list-item-title fc-widget-content">
                               <a href="#" onClick={(e) => e.preventDefault()}>
                                 {courseName}
                               </a>
                               <div className="titleLines">
-                                <div className="small">{cls.faculty}</div>
-                                <div className="small">{cls.room}</div>
+                                <div className="faculty">{cls.faculty}</div>
+                                <div className="room">{cls.room}</div>
                               </div>
                             </td>
                           </tr>
