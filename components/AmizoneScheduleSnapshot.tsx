@@ -2,11 +2,28 @@
 
 import { ScheduledClasses } from "@/lib/types";
 import { format } from "date-fns";
+import { formatAmizoneTime } from "@/lib/date-utils";
 
-function formatTimeParts(startIso: string, endIso: string) {
-  const start = new Date(startIso);
-  const end = new Date(endIso);
-  return { start: format(start, "HH:mm"), end: format(end, "HH:mm") };
+function splitFacultyLines(facultyRaw: string): { primary: string; secondary: string[] } {
+  const normalize = (s: string) => s.replace(/,(?!\s)/g, ", ").replace(/\s+/g, " ").trim();
+
+  const lines = facultyRaw
+    .split(/\r?\n/g)
+    .map((l) => l.trim())
+    .filter(Boolean);
+
+  if (lines.length > 1) {
+    const [first, ...rest] = lines;
+    return { primary: normalize(first), secondary: rest.map(normalize).filter(Boolean) };
+  }
+
+  const faculty = normalize(facultyRaw);
+  const match = faculty.match(/^(.*?)(\s+Group\/Sec\b.*)$/i);
+  if (match) {
+    return { primary: match[1].trim(), secondary: [match[2].trim()].filter(Boolean) };
+  }
+
+  return { primary: faculty, secondary: [] };
 }
 
 function attendanceDotColor(attendance: string) {
@@ -26,22 +43,22 @@ export function AmizoneScheduleSnapshot({ date, schedule }: { date: Date; schedu
   const dayLabel = format(date, "EEEE");
   const dateLabel = format(date, "MMMM d, yyyy");
 
-  const classes = [...schedule.classes].sort(
-    (a, b) => new Date(a.startTime).getTime() - new Date(b.startTime).getTime()
-  );
+  const classes = [...schedule.classes].sort((a, b) => a.startTime.localeCompare(b.startTime));
 
   return (
     <div className="amizone-schedule-snapshot" aria-hidden>
       <style>{`
         .amizone-schedule-snapshot {
-          width: 1148px;
+          width: 100%;
           background: #ffffff;
-          font-family: system-ui, -apple-system, Segoe UI, Roboto, Arial, sans-serif;
+          font-family: "Helvetica Neue", Helvetica, Arial, sans-serif;
           color: #333;
+          box-sizing: border-box;
         }
 
         .amizone-schedule-snapshot,
         .amizone-schedule-snapshot * {
+          box-sizing: border-box;
           border-color: #dddddd;
         }
 
@@ -52,6 +69,7 @@ export function AmizoneScheduleSnapshot({ date, schedule }: { date: Date; schedu
           border: 1px solid #bce8f1;
           border-radius: 4px;
           overflow: hidden;
+          width: 100%;
         }
         .amizone-schedule-snapshot .panel-heading {
           padding: 16px 20px;
@@ -97,6 +115,13 @@ export function AmizoneScheduleSnapshot({ date, schedule }: { date: Date; schedu
         .amizone-schedule-snapshot .btnGroup {
           display: inline-flex;
           gap: 10px;
+          align-items: center;
+        }
+        .amizone-schedule-snapshot .btnSet {
+          display: inline-flex;
+        }
+        .amizone-schedule-snapshot .btnSet .btn + .btn {
+          margin-left: -1px; /* collapse borders like Bootstrap btn-group */
         }
         .amizone-schedule-snapshot .dateTitle {
           text-align: center;
@@ -119,7 +144,8 @@ export function AmizoneScheduleSnapshot({ date, schedule }: { date: Date; schedu
           font-size: 1em;
         }
         .amizone-schedule-snapshot .fc .fc-list-table {
-          table-layout: auto;
+          width: 100% !important;
+          table-layout: fixed;
           border: 1px solid #dddddd;
         }
         .amizone-schedule-snapshot .fc th,
@@ -149,6 +175,7 @@ export function AmizoneScheduleSnapshot({ date, schedule }: { date: Date; schedu
           color: #31708f;
           width: 86px;
           white-space: nowrap;
+          padding-right: 0;
         }
         .amizone-schedule-snapshot .fc-timeStack {
           display: grid;
@@ -183,10 +210,17 @@ export function AmizoneScheduleSnapshot({ date, schedule }: { date: Date; schedu
           color: #5c006c;
           font-size: 18px;
           font-weight: 400;
+          width: auto;
+          overflow-wrap: anywhere;
         }
         .amizone-schedule-snapshot .fc-list-item-title a {
           text-decoration: none;
           color: inherit;
+        }
+        .amizone-schedule-snapshot .fc-view-container,
+        .amizone-schedule-snapshot .fc-scroller,
+        .amizone-schedule-snapshot #calendar {
+          width: 100%;
         }
 
         /* Amizone overrides captured in style_analyser.json. */
@@ -208,11 +242,11 @@ export function AmizoneScheduleSnapshot({ date, schedule }: { date: Date; schedu
           line-height: 1.25;
           font-weight: 400;
         }
-        .amizone-schedule-snapshot .titleLines .faculty {
+        .amizone-schedule-snapshot .titleLines .facultyPrimary {
           color: #000000;
           font-weight: 700;
         }
-        .amizone-schedule-snapshot .titleLines .room {
+        .amizone-schedule-snapshot .titleLines .metaLine {
           color: #5c006c;
           font-weight: 400;
         }
@@ -229,15 +263,17 @@ export function AmizoneScheduleSnapshot({ date, schedule }: { date: Date; schedu
         <div className="panel-body">
           <div className="toolbarRow">
             <div className="btnGroup">
-              <div className="btn" aria-hidden>
-                <svg viewBox="0 0 24 24" aria-hidden="true">
-                  <path d="M15.41 7.41 14 6l-6 6 6 6 1.41-1.41L10.83 12z" />
-                </svg>
-              </div>
-              <div className="btn" aria-hidden>
-                <svg viewBox="0 0 24 24" aria-hidden="true">
-                  <path d="m8.59 16.59 1.41 1.41 6-6-6-6-1.41 1.41L13.17 12z" />
-                </svg>
+              <div className="btnSet">
+                <div className="btn" aria-hidden>
+                  <svg viewBox="0 0 24 24" aria-hidden="true">
+                    <path d="M15 5 6 12l9 7V5z" />
+                  </svg>
+                </div>
+                <div className="btn" aria-hidden>
+                  <svg viewBox="0 0 24 24" aria-hidden="true">
+                    <path d="m9 5 9 7-9 7V5z" />
+                  </svg>
+                </div>
               </div>
               <div className="btn" aria-hidden>
                 <svg viewBox="0 0 24 24" aria-hidden="true">
@@ -269,9 +305,15 @@ export function AmizoneScheduleSnapshot({ date, schedule }: { date: Date; schedu
                     ) : (
                       classes.map((cls, idx) => {
                         const isCancelled = Boolean(cls.cancelled);
-                        const courseName = cls.course.name.includes(" - ") ? cls.course.name.split(" - ")[1] : cls.course.name;
-                        const { start, end } = formatTimeParts(cls.startTime, cls.endTime);
+                        const courseName = cls.course.name;
+                        const start = formatAmizoneTime(cls.startTime);
+                        const end = formatAmizoneTime(cls.endTime);
                         const dot = attendanceDotColor(cls.attendance);
+                        const faculty = splitFacultyLines(cls.faculty);
+                        const roomLines = cls.room
+                          .split(/\r?\n/g)
+                          .map((l) => l.trim())
+                          .filter(Boolean);
 
                         return (
                           <tr
@@ -293,8 +335,17 @@ export function AmizoneScheduleSnapshot({ date, schedule }: { date: Date; schedu
                                 {courseName}
                               </a>
                               <div className="titleLines">
-                                <div className="faculty">{cls.faculty}</div>
-                                <div className="room">{cls.room}</div>
+                                <div className="facultyPrimary">{faculty.primary}</div>
+                                {faculty.secondary.map((line, i) => (
+                                  <div key={i} className="metaLine">
+                                    {line}
+                                  </div>
+                                ))}
+                                {roomLines.map((line, i) => (
+                                  <div key={`room-${i}`} className="metaLine">
+                                    {line}
+                                  </div>
+                                ))}
                               </div>
                             </td>
                           </tr>
