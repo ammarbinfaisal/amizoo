@@ -44,7 +44,7 @@ export default function ScheduleTab() {
       <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4">
         <h2 className="text-xl font-black uppercase tracking-tight">Class Schedule</h2>
         <div className="w-full flex justify-end sm:w-auto gap-2 items-center">
-          <ScheduleScreenshotButton date={date} schedule={schedule} disabled={loading} />
+          {/*<ScheduleScreenshotButton date={date} schedule={schedule} disabled={loading} />*/}
           <Button
             variant="outline"
             size="icon"
