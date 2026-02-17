@@ -21,6 +21,10 @@ export interface Credentials {
   password: string;
 }
 
+interface ScheduleFetchOptions {
+  fresh?: boolean;
+}
+
 export function getLocalCredentials(): Credentials | null {
   if (typeof window === "undefined") return null;
   const username = localStorage.getItem("amizone_user");
@@ -77,9 +81,14 @@ export const amizoneApi = {
   getCourses: (creds?: Credentials) => fetchFromAmizone<Courses>("/api/v1/courses", creds),
   getCoursesBySemester: (creds: Credentials | undefined, semesterRef: string) =>
     fetchFromAmizone<Courses>(`/api/v1/courses/${encodeURIComponent(semesterRef)}`, creds),
-  getClassSchedule: (creds: Credentials | undefined, date: string) => {
+  getClassSchedule: (creds: Credentials | undefined, date: string, options?: ScheduleFetchOptions) => {
     const [year, month, day] = date.split("-");
-    return fetchFromAmizone<ScheduledClasses>(`/api/v1/class_schedule/${year}/${month}/${day}`, creds);
+    let endpoint = `/api/v1/class_schedule/${year}/${month}/${day}`;
+    if (options?.fresh) {
+      const refreshTag = new Date().toISOString().slice(0, 10);
+      endpoint = `${endpoint}?refresh=${encodeURIComponent(refreshTag)}`;
+    }
+    return fetchFromAmizone<ScheduledClasses>(endpoint, creds, undefined, options?.fresh ? { cache: "no-store" } : undefined);
   },
   // Legacy shape compatibility (some deployments return { macAddress }).
   getWifiInfo: (creds?: Credentials) => fetchFromAmizone<WifiInfo>("/api/v1/wifi_mac_address", creds),
