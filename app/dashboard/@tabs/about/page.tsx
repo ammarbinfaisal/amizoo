@@ -3,6 +3,11 @@ import { Button } from "@/components/ui/button";
 import { Github, BarChart, Info, ExternalLink } from "lucide-react";
 import Link from "next/link";
 
+const GRAFANA_DASHBOARD_URL =
+  "https://grafana.ami.zoo.fullstacktics.com/d/amizone-overview/amizone-overview?orgId=1";
+const GRAFANA_AUTO_LOGIN_URL =
+  "https://public:public@grafana.ami.zoo.fullstacktics.com/d/amizone-overview/amizone-overview?orgId=1";
+
 export default function AboutPage() {
   return (
     <div className="space-y-8 animate-in fade-in slide-in-from-bottom-4 duration-500">
@@ -48,12 +53,19 @@ export default function AboutPage() {
             </p>
             <div className="pt-2">
               <Button asChild variant="outline" className="w-full border-2 font-bold uppercase text-[10px] tracking-widest gap-2">
-                <Link href="https://grafana.ami.zoo.fullstacktics.com/d/amizone-overview/amizone-overview?orgId=1" target="_blank">
+                <Link href={GRAFANA_AUTO_LOGIN_URL} target="_blank">
                   View Grafana Dashboard <ExternalLink className="h-3 w-3" />
                 </Link>
               </Button>
-              <p className="text-[9px] text-center mt-2 text-muted-foreground uppercase font-bold">
-                Credentials: public / public
+              <p className="text-[9px] text-center mt-2 text-muted-foreground font-bold normal-case">
+                Credentials: <code className="font-mono text-[10px]">public / public</code>
+              </p>
+              <p className="text-[9px] text-center mt-1 text-muted-foreground">
+                If auto-login is blocked by your browser, open{" "}
+                <Link href={GRAFANA_DASHBOARD_URL} target="_blank" className="underline">
+                  the direct dashboard link
+                </Link>
+                .
               </p>
             </div>
           </CardContent>

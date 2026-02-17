@@ -1,6 +1,6 @@
 "use client";
 
-import { ScheduledClasses } from "@/lib/types";
+import { ScheduledClasses, AttendanceState } from "@/lib/types";
 import { format } from "date-fns";
 import { formatAmizoneTime } from "@/lib/date-utils";
 
@@ -24,6 +24,14 @@ function splitFacultyLines(facultyRaw: string): { primary: string; secondary: st
   }
 
   return { primary: faculty, secondary: [] };
+}
+
+function dotColor(attendance: string): string {
+  switch (attendance) {
+    case AttendanceState.PRESENT: return "#28a745";
+    case AttendanceState.ABSENT: return "#dc3545";
+    default: return "#3a87ad";
+  }
 }
 
 export function AmizoneScheduleSnapshot({ date, schedule }: { date: Date; schedule: ScheduledClasses }) {
@@ -107,7 +115,12 @@ export function AmizoneScheduleSnapshot({ date, schedule }: { date: Date; schedu
           width: 100%;
           border: 1px solid #ddd;
           border-collapse: collapse;
+          table-layout: fixed;
         }
+
+        .amizone-schedule-snapshot .fc-list-table col.fc-list-col-time { width: 11%; }
+        .amizone-schedule-snapshot .fc-list-table col.fc-list-col-marker { width: 3%; }
+        .amizone-schedule-snapshot .fc-list-table col.fc-list-col-title { width: 86%; }
 
         .amizone-schedule-snapshot .fc-list-heading td {
           background: #F5F5F5;
@@ -119,21 +132,29 @@ export function AmizoneScheduleSnapshot({ date, schedule }: { date: Date; schedu
         }
 
         .amizone-schedule-snapshot .fc-list-item td {
-          padding: 8px 14px; 
-          border-top: 1px solid #a5ecfb; 
+          padding: 8px 14px;
+          border-top: 1px solid #a5ecfb;
           vertical-align: top;
         }
 
         .amizone-schedule-snapshot .fc-list-item-time {
-          width: 100px;
           color: #31708f;
-          font-size: 13px; 
-          white-space: nowrap;
+          font-size: 13px;
+          white-space: normal;
+          line-height: 1.4;
         }
 
         .amizone-schedule-snapshot .fc-list-item-marker {
-          width: 30px;
           text-align: center;
+        }
+
+        .amizone-schedule-snapshot .fc-list-item td.fc-list-item-time {
+          padding-right: 8px;
+        }
+
+        .amizone-schedule-snapshot .fc-list-item td.fc-list-item-marker {
+          padding-left: 8px;
+          padding-right: 8px;
         }
 
         .amizone-schedule-snapshot .fc-event-dot {
@@ -141,14 +162,13 @@ export function AmizoneScheduleSnapshot({ date, schedule }: { date: Date; schedu
           width: 10px;
           height: 10px;
           border-radius: 50%;
-          background-color: #3a87ad;
         }
 
         /* Title & Faculty Content */
         .amizone-schedule-snapshot .fc-list-item-title {
-          font-size: 13px; 
+          font-size: 13px;
           line-height: 1.5;
-          color: rgb(92, 0, 108); 
+          color: rgb(92, 0, 108);
         }
 
         .amizone-schedule-snapshot .fc-list-item-title a {
@@ -157,8 +177,8 @@ export function AmizoneScheduleSnapshot({ date, schedule }: { date: Date; schedu
         }
 
         .amizone-schedule-snapshot .faculty-name {
-          font-weight: 700; 
-          color: rgb(92, 0, 108); 
+          font-weight: 700;
+          color: rgb(92, 0, 108);
         }
 
         .amizone-schedule-snapshot .meta-info {
@@ -171,16 +191,34 @@ export function AmizoneScheduleSnapshot({ date, schedule }: { date: Date; schedu
         <div className="widget-header">
           <h4>My Classes</h4>
         </div>
-        
+
         <div className="widget-main">
           <div id="calendar" className="fc fc-unthemed fc-ltr">
             <div className="fc-toolbar">
               <div className="fc-left" style={{ display: 'flex', gap: '4px' }}>
                 <div className="fc-button-group" style={{ display: 'flex' }}>
-                  <button className="fc-button fc-prev-button">‹</button>
-                  <button className="fc-button fc-next-button">›</button>
+                  <button className="fc-button fc-prev-button">&#x25C0;</button>
+                  <button className="fc-button fc-next-button">&#x25B6;</button>
                 </div>
-                <button className="fc-button" style={{ borderRadius: '4px' }}>📅</button>
+                <button className="fc-button" style={{ borderRadius: '4px' }} aria-label="Calendar">
+                  {/* Inline SVG to avoid missing-emoji glyphs in generated screenshots. */}
+                  <svg
+                    width="16"
+                    height="16"
+                    viewBox="0 0 16 16"
+                    aria-hidden="true"
+                    focusable="false"
+                    style={{ display: "block" }}
+                  >
+                    <rect x="1.5" y="2.5" width="13" height="12" rx="1" fill="none" stroke="currentColor" strokeWidth="1.5" />
+                    <line x1="1.5" y1="5.5" x2="14.5" y2="5.5" stroke="currentColor" strokeWidth="1.5" />
+                    <line x1="5" y1="1.5" x2="5" y2="4" stroke="currentColor" strokeWidth="1.5" />
+                    <line x1="11" y1="1.5" x2="11" y2="4" stroke="currentColor" strokeWidth="1.5" />
+                    <rect x="4" y="7.25" width="2" height="2" fill="currentColor" />
+                    <rect x="7" y="7.25" width="2" height="2" fill="currentColor" />
+                    <rect x="10" y="7.25" width="2" height="2" fill="currentColor" />
+                  </svg>
+                </button>
               </div>
               <div className="fc-center">
                 <h2>{dateLabel}</h2>
@@ -190,6 +228,11 @@ export function AmizoneScheduleSnapshot({ date, schedule }: { date: Date; schedu
 
             <div className="fc-view-container">
               <table className="fc-list-table">
+                <colgroup>
+                  <col className="fc-list-col-time" />
+                  <col className="fc-list-col-marker" />
+                  <col className="fc-list-col-title" />
+                </colgroup>
                 <tbody>
                   <tr className="fc-list-heading">
                     <td colSpan={3}>
@@ -202,20 +245,23 @@ export function AmizoneScheduleSnapshot({ date, schedule }: { date: Date; schedu
                     return (
                       <tr key={idx} className="fc-list-item">
                         <td className="fc-list-item-time">
-                          {cls.startTime} - {cls.endTime}
+                          {formatAmizoneTime(cls.startTime)}
+                          <br />
+                          -
+                          <br />
+                          {formatAmizoneTime(cls.endTime)}
                         </td>
                         <td className="fc-list-item-marker">
-                          <span className="fc-event-dot" />
+                          <span className="fc-event-dot" style={{ backgroundColor: dotColor(cls.attendance) }} />
                         </td>
                         <td className="fc-list-item-title">
                           <a href="#" onClick={(e) => e.preventDefault()}>
                             {cls.course.name}
                             <br />
                             <b className="faculty-name">{faculty.primary}</b>
-                            <br />
                             {faculty.secondary.map((line, i) => (
                               <span key={i} className="meta-info">
-                                {line} <br />
+                                {line}
                               </span>
                             ))}
                             {cls.room && <span className="meta-info">{cls.room}</span>}

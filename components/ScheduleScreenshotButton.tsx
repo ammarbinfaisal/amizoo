@@ -68,6 +68,7 @@ export function ScheduleScreenshotButton({
         onClick={handleScreenshot}
         disabled={Boolean(disabled) || loading || !schedule}
         title="Download schedule screenshot"
+        data-testid="schedule-screenshot"
       >
         <Camera className={loading ? "animate-pulse" : ""} size={16} />
       </Button>
@@ -77,6 +78,7 @@ export function ScheduleScreenshotButton({
         className="hidden md:flex font-black uppercase text-[10px] tracking-widest h-9"
         onClick={handleScreenshot}
         disabled={Boolean(disabled) || loading || !schedule}
+        data-testid="schedule-screenshot"
       >
         <Camera className={loading ? "animate-pulse mr-2" : "mr-2"} size={14} />
         Screenshot
@@ -90,7 +92,7 @@ export function ScheduleScreenshotButton({
             position: "fixed",
             top: 0,
             left: -100000,
-            width: 1148,
+            width: 520,
             pointerEvents: "none",
             background: "#ffffff",
             borderColor: "#dddddd",
