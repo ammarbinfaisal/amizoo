@@ -1,6 +1,5 @@
 import { Attendance, ScheduledClasses } from "@/lib/types";
 import { cn } from "@/lib/utils";
-import { Badge } from "@/components/ui/badge";
 import { Card, CardContent } from "@/components/ui/card";
 import { Clock, MapPin, User } from "lucide-react";
 import { formatAmizoneTime, formatClassRange } from "@/lib/date-utils";
@@ -81,19 +80,10 @@ export function Schedule({
                   </div>
                   <div className="flex items-center gap-2 shrink-0">
                     {isCancelled && (
-                      <Badge variant="destructive" className="font-black uppercase text-[8px] sm:text-[10px] px-2 sm:px-3 py-0.5 sm:py-1">
+                      <span className="font-black uppercase text-[8px] sm:text-[10px] px-2 sm:px-3 py-0.5 sm:py-1 border border-destructive/40 text-destructive rounded-md">
                         Cancelled
-                      </Badge>
+                      </span>
                     )}
-                    <Badge
-                      variant="outline"
-                      className={cn(
-                        "font-black tabular-nums border-2 text-[8px] sm:text-[10px] px-2 sm:px-3 py-0.5 sm:py-1 shrink-0",
-                        attendance ? getAttendanceColor(attendance) : "text-muted-foreground border-muted-foreground/40"
-                      )}
-                    >
-                      {attendance ? `${calculatePercentage(attendance)}%` : "NA"}
-                    </Badge>
                   </div>
                 </div>
                 <div className="flex flex-col sm:flex-row sm:flex-wrap gap-x-6 gap-y-1 text-[10px] sm:text-xs font-medium text-muted-foreground">
@@ -104,6 +94,18 @@ export function Schedule({
                   <div className="flex items-center gap-1.5 shrink-0">
                     <MapPin className="h-3 w-3 sm:h-3.5 sm:w-3.5 shrink-0" />
                     <span>{cls.room}</span>
+                    {attendance ? (
+                      <>
+                        <span className={cn("text-[9px] sm:text-[10px] font-normal tabular-nums", getAttendanceColor(attendance))}>
+                          {calculatePercentage(attendance)}%
+                        </span>
+                        <span className="text-[9px] sm:text-[10px] font-normal tabular-nums text-muted-foreground">
+                          {attendance.attended}/{attendance.held}
+                        </span>
+                      </>
+                    ) : (
+                      <span className="text-[9px] sm:text-[10px] font-normal tabular-nums text-muted-foreground/70">NA</span>
+                    )}
                   </div>
                 </div>
                 {isCancelled && (
@@ -127,7 +129,7 @@ function calculatePercentage(attendance: Attendance) {
 
 function getAttendanceColor(attendance: Attendance) {
   const percentage = attendance.held === 0 ? 100 : (attendance.attended / attendance.held) * 100;
-  if (percentage >= 75) return "text-primary border-primary";
-  if (percentage >= 60) return "text-secondary-foreground border-secondary";
-  return "text-destructive border-destructive";
+  if (percentage >= 75) return "text-primary";
+  if (percentage >= 60) return "text-secondary-foreground";
+  return "text-destructive";
 }
