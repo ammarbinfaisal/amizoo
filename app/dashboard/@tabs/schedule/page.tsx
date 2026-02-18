@@ -1,8 +1,8 @@
 "use client";
 
-import { useEffect, useState, useCallback } from "react";
+import { useEffect, useState, useCallback, useMemo } from "react";
 import { amizoneApi, getLocalCredentials } from "@/lib/api";
-import { ScheduledClasses } from "@/lib/types";
+import { AttendanceRecords, ScheduledClasses } from "@/lib/types";
 import { Schedule } from "@/components/Schedule";
 import { DateSelector } from "@/components/DateSelector";
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card";
@@ -27,6 +27,7 @@ function shouldForceFreshSchedule(selectedDate: Date, now: Date): boolean {
 export default function ScheduleTab() {
   const [date, setDate] = useState<Date>(new Date());
   const [schedule, setSchedule] = useState<ScheduledClasses | null>(null);
+  const [attendance, setAttendance] = useState<AttendanceRecords | null>(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
 
@@ -41,18 +42,41 @@ export default function ScheduleTab() {
     const fresh = Boolean(opts?.fresh) || forceFresh;
 
     try {
-      const data = await amizoneApi.getClassSchedule(credentials, dateStr, { fresh });
-      setSchedule(data);
+      const schedulePromise = amizoneApi.getClassSchedule(credentials, dateStr, { fresh });
+      const attendancePromise =
+        attendance && !opts?.fresh
+          ? Promise.resolve(attendance)
+          : amizoneApi.getAttendance(credentials, fresh ? { cache: "no-store" } : undefined);
+
+      const [scheduleResult, attendanceResult] = await Promise.allSettled([schedulePromise, attendancePromise]);
+
+      if (scheduleResult.status === "rejected") {
+        throw scheduleResult.reason;
+      }
+
+      setSchedule(scheduleResult.value);
+
+      if (attendanceResult.status === "fulfilled") {
+        setAttendance(attendanceResult.value);
+      }
     } catch (e) {
       setError(e instanceof Error ? e.message : "Failed to load schedule");
     } finally {
       setLoading(false);
     }
-  }, []);
+  }, [attendance]);
 
   useEffect(() => {
     fetchSchedule(date);
   }, [date, fetchSchedule]);
+
+  const attendanceByCourse = useMemo(() => {
+    if (!attendance) return null;
+    return attendance.records.reduce<Record<string, { attended: number; held: number }>>((acc, record) => {
+      acc[record.course.code] = record.attendance;
+      return acc;
+    }, {});
+  }, [attendance]);
 
   return (
     <div className="space-y-4">
@@ -102,7 +126,7 @@ export default function ScheduleTab() {
           </CardContent>
         </Card>
       ) : schedule ? (
-        <Schedule schedule={schedule} date={date} />
+        <Schedule schedule={schedule} date={date} attendanceByCourse={attendanceByCourse} />
       ) : null}
     </div>
   );

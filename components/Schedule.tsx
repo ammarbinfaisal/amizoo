@@ -1,4 +1,4 @@
-import { ScheduledClasses } from "@/lib/types";
+import { Attendance, ScheduledClasses } from "@/lib/types";
 import { cn } from "@/lib/utils";
 import { Badge } from "@/components/ui/badge";
 import { Card, CardContent } from "@/components/ui/card";
@@ -6,7 +6,15 @@ import { Clock, MapPin, User } from "lucide-react";
 import { formatAmizoneTime, formatClassRange } from "@/lib/date-utils";
 import { format } from "date-fns";
 
-export function Schedule({ schedule, date }: { schedule: ScheduledClasses; date?: Date }) {
+export function Schedule({
+  schedule,
+  date,
+  attendanceByCourse,
+}: {
+  schedule: ScheduledClasses;
+  date?: Date;
+  attendanceByCourse?: Record<string, Attendance> | null;
+}) {
   if (schedule.classes.length === 0) {
     const dateStr = date ? format(date, "EEEE, MMM d") : "today";
     return (
@@ -24,6 +32,7 @@ export function Schedule({ schedule, date }: { schedule: ScheduledClasses; date?
       {schedule.classes.map((cls, i) => {
         const isCancelled = Boolean(cls.cancelled);
         const courseName = cls.course.name.includes(" - ") ? cls.course.name.split(" - ")[1] : cls.course.name;
+        const attendance = attendanceByCourse?.[cls.course.code];
 
         return (
           <Card
@@ -76,6 +85,15 @@ export function Schedule({ schedule, date }: { schedule: ScheduledClasses; date?
                         Cancelled
                       </Badge>
                     )}
+                    <Badge
+                      variant="outline"
+                      className={cn(
+                        "font-black tabular-nums border-2 text-[8px] sm:text-[10px] px-2 sm:px-3 py-0.5 sm:py-1 shrink-0",
+                        attendance ? getAttendanceColor(attendance) : "text-muted-foreground border-muted-foreground/40"
+                      )}
+                    >
+                      {attendance ? `${calculatePercentage(attendance)}%` : "NA"}
+                    </Badge>
                   </div>
                 </div>
                 <div className="flex flex-col sm:flex-row sm:flex-wrap gap-x-6 gap-y-1 text-[10px] sm:text-xs font-medium text-muted-foreground">
@@ -86,17 +104,6 @@ export function Schedule({ schedule, date }: { schedule: ScheduledClasses; date?
                   <div className="flex items-center gap-1.5 shrink-0">
                     <MapPin className="h-3 w-3 sm:h-3.5 sm:w-3.5 shrink-0" />
                     <span>{cls.room}</span>
-                    <span
-                      className={cn(
-                        "ml-1 text-[9px] sm:text-[10px] font-black uppercase tracking-widest",
-                        cls.attendance === "PRESENT" && "text-primary",
-                        cls.attendance === "ABSENT" && "text-destructive",
-                        cls.attendance === "PENDING" && "text-muted-foreground",
-                        (cls.attendance === "NA" || cls.attendance === "INVALID") && "text-muted-foreground/70"
-                      )}
-                    >
-                      • {cls.attendance}
-                    </span>
                   </div>
                 </div>
                 {isCancelled && (
@@ -111,4 +118,16 @@ export function Schedule({ schedule, date }: { schedule: ScheduledClasses; date?
       })}
     </div>
   );
+}
+
+function calculatePercentage(attendance: Attendance) {
+  if (attendance.held === 0) return "100.00";
+  return ((attendance.attended / attendance.held) * 100).toFixed(2);
+}
+
+function getAttendanceColor(attendance: Attendance) {
+  const percentage = attendance.held === 0 ? 100 : (attendance.attended / attendance.held) * 100;
+  if (percentage >= 75) return "text-primary border-primary";
+  if (percentage >= 60) return "text-secondary-foreground border-secondary";
+  return "text-destructive border-destructive";
 }
