@@ -1,7 +1,7 @@
 import { Attendance, ScheduledClasses } from "@/lib/types";
 import { cn } from "@/lib/utils";
 import { Card, CardContent } from "@/components/ui/card";
-import { Clock, MapPin, User } from "lucide-react";
+import { AlertTriangle, Clock, MapPin, User } from "lucide-react";
 import { formatAmizoneTime, formatClassRange } from "@/lib/date-utils";
 import { format } from "date-fns";
 
@@ -96,7 +96,8 @@ export function Schedule({
                     <span>{cls.room}</span>
                     {attendance ? (
                       <>
-                        <span className={cn("text-[9px] sm:text-[10px] font-normal tabular-nums", getAttendanceColor(attendance))}>
+                        <span className={cn("text-[9px] sm:text-[10px] font-normal tabular-nums flex items-center gap-1", getAttendanceColor(attendance))}>
+                          {isCriticalAttendance(attendance) && <AlertTriangle className="h-3 w-3" />}
                           {calculatePercentage(attendance)}%
                         </span>
                         <span className="text-[9px] sm:text-[10px] font-normal tabular-nums text-muted-foreground">
@@ -129,7 +130,13 @@ function calculatePercentage(attendance: Attendance) {
 
 function getAttendanceColor(attendance: Attendance) {
   const percentage = attendance.held === 0 ? 100 : (attendance.attended / attendance.held) * 100;
-  if (percentage >= 75) return "text-primary";
-  if (percentage >= 60) return "text-secondary-foreground";
-  return "text-destructive";
+  if (percentage > 90) return "text-emerald-700";
+  if (percentage >= 75) return "text-amber-600";
+  if (percentage < 70) return "text-rose-800";
+  return "text-red-700";
+}
+
+function isCriticalAttendance(attendance: Attendance) {
+  const percentage = attendance.held === 0 ? 100 : (attendance.attended / attendance.held) * 100;
+  return percentage < 70;
 }

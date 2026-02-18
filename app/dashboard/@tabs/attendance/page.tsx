@@ -5,7 +5,7 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/com
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
 import { Badge } from "@/components/ui/badge";
 import { Skeleton } from "@/components/ui/skeleton";
-import { RefreshCw } from "lucide-react";
+import { AlertTriangle, RefreshCw } from "lucide-react";
 import { Button } from "@/components/ui/button";
 
 export default function AttendanceTab() {
@@ -94,6 +94,9 @@ export default function AttendanceTab() {
                       variant="outline"
                       className={`font-black tabular-nums border-2 ${getAttendanceColor(record.attendance)}`}
                     >
+                      {isCriticalAttendance(record.attendance) && (
+                        <AlertTriangle className="h-3 w-3 mr-1" />
+                      )}
                       {calculatePercentage(record.attendance)}%
                     </Badge>
                     <span className="text-xs text-muted-foreground tabular-nums">
@@ -109,6 +112,9 @@ export default function AttendanceTab() {
                     variant="outline"
                     className={`font-black tabular-nums border-2 ${getAttendanceColor(record.attendance)}`}
                   >
+                    {isCriticalAttendance(record.attendance) && (
+                      <AlertTriangle className="h-3 w-3 mr-1" />
+                    )}
                     {calculatePercentage(record.attendance)}%
                   </Badge>
                 </TableCell>
@@ -128,7 +134,13 @@ function calculatePercentage(attendance: { attended: number; held: number }) {
 
 function getAttendanceColor(attendance: { attended: number; held: number }) {
   const percentage = attendance.held === 0 ? 100 : (attendance.attended / attendance.held) * 100;
-  if (percentage >= 75) return "text-primary border-primary";
-  if (percentage >= 60) return "text-secondary-foreground border-secondary";
-  return "text-destructive border-destructive";
+  if (percentage > 90) return "text-emerald-700 border-emerald-700";
+  if (percentage >= 75) return "text-amber-600 border-amber-500";
+  if (percentage < 70) return "text-rose-800 border-rose-800";
+  return "text-red-700 border-red-700";
+}
+
+function isCriticalAttendance(attendance: { attended: number; held: number }) {
+  const percentage = attendance.held === 0 ? 100 : (attendance.attended / attendance.held) * 100;
+  return percentage < 70;
 }
