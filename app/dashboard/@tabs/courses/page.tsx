@@ -4,7 +4,6 @@ import { useEffect, useState, useCallback } from "react";
 import { amizoneApi, getLocalCredentials } from "@/lib/api";
 import { Courses, SemesterList } from "@/lib/types";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
-import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Separator } from "@/components/ui/separator";
 import { Skeleton } from "@/components/ui/skeleton";
@@ -17,17 +16,18 @@ export default function CoursesTab() {
   const [semesterRef, setSemesterRef] = useState<string | null>(null);
   const [error, setError] = useState<string | null>(null);
 
-  const fetchData = useCallback(async (ref: string | null) => {
+  const fetchData = useCallback(async (ref: string | null, opts?: { fresh?: boolean }) => {
     const credentials = getLocalCredentials();
     if (!credentials) return;
 
     setLoading(true);
     setError(null);
+    const init = opts?.fresh ? ({ cache: "no-store" } as const) : undefined;
 
     try {
       const [coursesData, semestersData] = await Promise.all([
-        ref ? amizoneApi.getCoursesBySemester(credentials, ref) : amizoneApi.getCourses(credentials),
-        amizoneApi.getSemesters(credentials).catch(() => null)
+        ref ? amizoneApi.getCoursesBySemester(credentials, ref, init) : amizoneApi.getCourses(credentials, init),
+        amizoneApi.getSemesters(credentials, init).catch(() => null)
       ]);
       setCourses(coursesData);
       if (semestersData) setSemesters(semestersData);
@@ -39,7 +39,7 @@ export default function CoursesTab() {
   }, []);
 
   useEffect(() => {
-    fetchData(semesterRef);
+    fetchData(semesterRef, { fresh: false });
   }, [semesterRef, fetchData]);
 
   if (loading && !courses) {
@@ -87,7 +87,7 @@ export default function CoursesTab() {
           <Button
             size="sm"
             variant="outline"
-            onClick={() => fetchData(semesterRef)}
+            onClick={() => fetchData(semesterRef, { fresh: true })}
             disabled={loading}
             className="font-bold uppercase text-[10px] tracking-widest ml-auto"
           >
@@ -100,7 +100,7 @@ export default function CoursesTab() {
       {error ? (
         <Card className="border-destructive/20 bg-destructive/5 py-4 md:py-6 p-8 md:p-12 text-center">
             <p className="text-destructive font-bold mb-4">{error}</p>
-            <Button onClick={() => fetchData(semesterRef)} variant="outline">Retry</Button>
+            <Button onClick={() => fetchData(semesterRef, { fresh: true })} variant="outline">Retry</Button>
         </Card>
       ) : courses && (
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4 sm:gap-6">

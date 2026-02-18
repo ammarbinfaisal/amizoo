@@ -1,8 +1,10 @@
-import { chromium, type Browser, type Page } from "playwright";
+import { chromium, type Browser, type BrowserContextOptions, type Page } from "playwright";
 import { mkdir, writeFile, readFile } from "node:fs/promises";
 import path from "node:path";
 
 type Mode = "auth" | "analyze";
+
+type StorageState = Exclude<BrowserContextOptions["storageState"], undefined>;
 
 type ComputedSample = {
   selector: string;
@@ -72,9 +74,9 @@ async function saveStorageState(page: Page) {
   await writeFile(STORAGE_STATE_PATH, JSON.stringify(storage, null, 2), "utf8");
 }
 
-async function loadStorageState(): Promise<any> {
+async function loadStorageState(): Promise<StorageState> {
   const raw = await readFile(STORAGE_STATE_PATH, "utf8");
-  return JSON.parse(raw);
+  return JSON.parse(raw) as StorageState;
 }
 
 function cssPropsToSample(): string[] {
@@ -388,4 +390,3 @@ main().catch((e) => {
   console.error(e);
   process.exit(1);
 });
-

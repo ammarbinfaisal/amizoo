@@ -8,12 +8,16 @@ export function formatAmizoneTime(timestamp: string): string {
   // Amizone API returns 'YYYY-MM-DDTHH:mm:ss'.
   // We extract the HH:mm part directly to avoid timezone conversion issues,
   // as it is already in IST.
-  if (timestamp.includes('T')) {
-    const timePart = timestamp.split('T')[1];
-    return timePart.substring(0, 5);
-  }
-  
-  return timestamp.substring(0, 5);
+  const rawTime = timestamp.includes("T") ? timestamp.split("T")[1] : timestamp;
+  const hhmm = rawTime.substring(0, 5);
+  const [hh, mm] = hhmm.split(":");
+  const hour24 = Number(hh);
+  const minute = Number(mm);
+  if (!Number.isFinite(hour24) || !Number.isFinite(minute)) return hhmm;
+
+  const period = hour24 >= 12 ? "PM" : "AM";
+  const hour12 = hour24 % 12 === 0 ? 12 : hour24 % 12;
+  return `${hour12}:${String(minute).padStart(2, "0")} ${period}`;
 }
 
 /**

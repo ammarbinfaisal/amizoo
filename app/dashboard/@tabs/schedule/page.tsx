@@ -9,7 +9,6 @@ import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/com
 import { Button } from "@/components/ui/button";
 import { RefreshCw } from "lucide-react";
 import { Skeleton } from "@/components/ui/skeleton";
-import { ScheduleScreenshotButton } from "@/components/ScheduleScreenshotButton";
 import { differenceInCalendarDays } from "date-fns";
 
 const SCHEDULE_PUBLISH_CUTOFF_HOUR = Number(process.env.NEXT_PUBLIC_SCHEDULE_PUBLISH_CUTOFF_HOUR ?? "15");
@@ -31,7 +30,7 @@ export default function ScheduleTab() {
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
 
-  const fetchSchedule = useCallback(async (d: Date) => {
+  const fetchSchedule = useCallback(async (d: Date, opts?: { fresh?: boolean }) => {
     const credentials = getLocalCredentials();
     if (!credentials) return;
 
@@ -39,9 +38,10 @@ export default function ScheduleTab() {
     setError(null);
     const dateStr = d.toISOString().split("T")[0];
     const forceFresh = shouldForceFreshSchedule(d, new Date());
+    const fresh = Boolean(opts?.fresh) || forceFresh;
 
     try {
-      const data = await amizoneApi.getClassSchedule(credentials, dateStr, { fresh: forceFresh });
+      const data = await amizoneApi.getClassSchedule(credentials, dateStr, { fresh });
       setSchedule(data);
     } catch (e) {
       setError(e instanceof Error ? e.message : "Failed to load schedule");
@@ -59,12 +59,11 @@ export default function ScheduleTab() {
       <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4">
         <h2 className="text-xl font-black uppercase tracking-tight">Class Schedule</h2>
         <div className="w-full flex justify-end sm:w-auto gap-2 items-center">
-          {/*<ScheduleScreenshotButton date={date} schedule={schedule} disabled={loading} />*/}
           <Button
             variant="outline"
             size="icon"
             className="md:hidden h-9 w-9"
-            onClick={() => fetchSchedule(date)}
+            onClick={() => fetchSchedule(date, { fresh: true })}
             disabled={loading}
             title="Refresh schedule"
           >
@@ -74,7 +73,7 @@ export default function ScheduleTab() {
             variant="outline"
             size="sm"
             className="hidden md:flex font-black uppercase text-[10px] tracking-widest h-9"
-            onClick={() => fetchSchedule(date)}
+            onClick={() => fetchSchedule(date, { fresh: true })}
             disabled={loading}
           >
             <RefreshCw className={loading ? "animate-spin mr-2" : "mr-2"} size={14} />
@@ -97,7 +96,7 @@ export default function ScheduleTab() {
             <CardDescription className="text-xs">{error}</CardDescription>
           </CardHeader>
           <CardContent className="flex justify-center">
-            <Button onClick={() => fetchSchedule(date)} variant="outline" size="sm">
+            <Button onClick={() => fetchSchedule(date, { fresh: true })} variant="outline" size="sm">
               <RefreshCw className="mr-2 h-3 w-3" /> Retry
             </Button>
           </CardContent>

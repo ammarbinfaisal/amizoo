@@ -21,6 +21,8 @@ export interface Credentials {
   password: string;
 }
 
+export type AmizoneRequestInit = Omit<RequestInit, "headers"> & { headers?: Record<string, string> };
+
 interface ScheduleFetchOptions {
   fresh?: boolean;
 }
@@ -37,7 +39,7 @@ export async function fetchFromAmizone<T>(
   endpoint: string,
   credentials?: Credentials,
   schema?: Type<T>,
-  init?: Omit<RequestInit, "headers"> & { headers?: Record<string, string> }
+  init?: AmizoneRequestInit
 ): Promise<T> {
   const creds = credentials || getLocalCredentials();
   if (!creds) {
@@ -75,24 +77,29 @@ export async function fetchFromAmizone<T>(
 }
 
 export const amizoneApi = {
-  getAttendance: (creds?: Credentials) => fetchFromAmizone<AttendanceRecords>("/api/v1/attendance", creds),
-  getProfile: (creds?: Credentials) => fetchFromAmizone<Profile>("/api/v1/user_profile", creds),
-  getSemesters: (creds?: Credentials) => fetchFromAmizone<SemesterList>("/api/v1/semesters", creds),
-  getCourses: (creds?: Credentials) => fetchFromAmizone<Courses>("/api/v1/courses", creds),
-  getCoursesBySemester: (creds: Credentials | undefined, semesterRef: string) =>
-    fetchFromAmizone<Courses>(`/api/v1/courses/${encodeURIComponent(semesterRef)}`, creds),
+  getAttendance: (creds?: Credentials, init?: AmizoneRequestInit) =>
+    fetchFromAmizone<AttendanceRecords>("/api/v1/attendance", creds, undefined, init),
+  getProfile: (creds?: Credentials, init?: AmizoneRequestInit) =>
+    fetchFromAmizone<Profile>("/api/v1/user_profile", creds, undefined, init),
+  getSemesters: (creds?: Credentials, init?: AmizoneRequestInit) =>
+    fetchFromAmizone<SemesterList>("/api/v1/semesters", creds, undefined, init),
+  getCourses: (creds?: Credentials, init?: AmizoneRequestInit) =>
+    fetchFromAmizone<Courses>("/api/v1/courses", creds, undefined, init),
+  getCoursesBySemester: (creds: Credentials | undefined, semesterRef: string, init?: AmizoneRequestInit) =>
+    fetchFromAmizone<Courses>(`/api/v1/courses/${encodeURIComponent(semesterRef)}`, creds, undefined, init),
   getClassSchedule: (creds: Credentials | undefined, date: string, options?: ScheduleFetchOptions) => {
     const [year, month, day] = date.split("-");
     let endpoint = `/api/v1/class_schedule/${year}/${month}/${day}`;
     if (options?.fresh) {
-      const refreshTag = new Date().toISOString().slice(0, 10);
-      endpoint = `${endpoint}?refresh=${encodeURIComponent(refreshTag)}`;
+      endpoint = `${endpoint}?refresh=${encodeURIComponent(String(Date.now()))}`;
     }
     return fetchFromAmizone<ScheduledClasses>(endpoint, creds, undefined, options?.fresh ? { cache: "no-store" } : undefined);
   },
   // Legacy shape compatibility (some deployments return { macAddress }).
-  getWifiInfo: (creds?: Credentials) => fetchFromAmizone<WifiInfo>("/api/v1/wifi_mac_address", creds),
-  getWifiMacInfo: (creds?: Credentials) => fetchFromAmizone<WifiMacInfo>("/api/v1/wifi_mac", creds),
+  getWifiInfo: (creds?: Credentials, init?: AmizoneRequestInit) =>
+    fetchFromAmizone<WifiInfo>("/api/v1/wifi_mac_address", creds, undefined, init),
+  getWifiMacInfo: (creds?: Credentials, init?: AmizoneRequestInit) =>
+    fetchFromAmizone<WifiMacInfo>("/api/v1/wifi_mac", creds, undefined, init),
   registerWifiMac: (creds: Credentials | undefined, address: string, overrideLimit = false) =>
     fetchFromAmizone<void>(
       "/api/v1/wifi_mac",
@@ -106,10 +113,12 @@ export const amizoneApi = {
     ),
   deregisterWifiMac: (creds: Credentials | undefined, address: string) =>
     fetchFromAmizone<void>(`/api/v1/wifi_mac/${encodeURIComponent(address)}`, creds, undefined, { method: "DELETE" }),
-  getExamSchedule: (creds?: Credentials) => fetchFromAmizone<ExaminationSchedule>("/api/v1/exam_schedule", creds),
-  getExamResult: (creds: Credentials | undefined, semesterRef: string) =>
-    fetchFromAmizone<ExamResultRecords>(`/api/v1/exam_result/${encodeURIComponent(semesterRef)}`, creds),
-  getCurrentExamResult: (creds?: Credentials) => fetchFromAmizone<ExamResultRecords>("/api/v1/exam_result", creds),
+  getExamSchedule: (creds?: Credentials, init?: AmizoneRequestInit) =>
+    fetchFromAmizone<ExaminationSchedule>("/api/v1/exam_schedule", creds, undefined, init),
+  getExamResult: (creds: Credentials | undefined, semesterRef: string, init?: AmizoneRequestInit) =>
+    fetchFromAmizone<ExamResultRecords>(`/api/v1/exam_result/${encodeURIComponent(semesterRef)}`, creds, undefined, init),
+  getCurrentExamResult: (creds?: Credentials, init?: AmizoneRequestInit) =>
+    fetchFromAmizone<ExamResultRecords>("/api/v1/exam_result", creds, undefined, init),
   submitFacultyFeedback: (creds: Credentials | undefined, payload: FillFacultyFeedbackRequest) =>
     fetchFromAmizone<FillFacultyFeedbackResponse>(
       "/api/v1/faculty/feedback/submit",

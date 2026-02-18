@@ -17,17 +17,18 @@ export default function ResultsTab() {
   const [semesterRef, setSemesterRef] = useState<string | null>(null);
   const [error, setError] = useState<string | null>(null);
 
-  const fetchData = useCallback(async (ref: string | null) => {
+  const fetchData = useCallback(async (ref: string | null, opts?: { fresh?: boolean }) => {
     const credentials = getLocalCredentials();
     if (!credentials) return;
 
     setLoading(true);
     setError(null);
+    const init = opts?.fresh ? ({ cache: "no-store" } as const) : undefined;
 
     try {
       const [resData, semData] = await Promise.all([
-        ref ? amizoneApi.getExamResult(credentials, ref) : amizoneApi.getCurrentExamResult(credentials),
-        amizoneApi.getSemesters(credentials).catch(() => null)
+        ref ? amizoneApi.getExamResult(credentials, ref, init) : amizoneApi.getCurrentExamResult(credentials, init),
+        amizoneApi.getSemesters(credentials, init).catch(() => null)
       ]);
       setData(resData);
       if (semData) setSemesters(semData);
@@ -39,7 +40,7 @@ export default function ResultsTab() {
   }, []);
 
   useEffect(() => {
-    fetchData(semesterRef);
+    fetchData(semesterRef, { fresh: false });
   }, [semesterRef, fetchData]);
 
   return (
@@ -79,7 +80,7 @@ export default function ResultsTab() {
           <Button
             size="sm"
             variant="outline"
-            onClick={() => fetchData(semesterRef)}
+            onClick={() => fetchData(semesterRef, { fresh: true })}
             disabled={loading}
             className="font-bold uppercase text-[10px] tracking-widest ml-auto"
           >
@@ -94,7 +95,7 @@ export default function ResultsTab() {
       ) : error ? (
         <Card className="border-destructive/20 bg-destructive/5 p-12 text-center">
             <p className="text-destructive font-bold mb-4">{error}</p>
-            <Button onClick={() => fetchData(semesterRef)} variant="outline">Retry</Button>
+            <Button onClick={() => fetchData(semesterRef, { fresh: true })} variant="outline">Retry</Button>
         </Card>
       ) : data && (
         <div className="space-y-6">

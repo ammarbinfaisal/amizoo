@@ -21,15 +21,16 @@ export default function ExamsTab() {
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
 
-  const fetchData = useCallback(async () => {
+  const fetchData = useCallback(async (opts?: { fresh?: boolean }) => {
     const credentials = getLocalCredentials();
     if (!credentials) return;
 
     setLoading(true);
     setError(null);
+    const init = opts?.fresh ? ({ cache: "no-store" } as const) : undefined;
 
     try {
-      const data = await amizoneApi.getExamSchedule(credentials);
+      const data = await amizoneApi.getExamSchedule(credentials, init);
       setExams(normalizeExamItems(data));
     } catch (e) {
       setError(e instanceof Error ? e.message : "Failed to load exams");
@@ -39,7 +40,7 @@ export default function ExamsTab() {
   }, []);
 
   useEffect(() => {
-    fetchData();
+    fetchData({ fresh: false });
   }, [fetchData]);
 
   if (loading) {
@@ -55,7 +56,7 @@ export default function ExamsTab() {
     <div className="space-y-4">
       <div className="flex justify-between items-center">
         <h2 className="text-xl font-black uppercase tracking-tight">Exam Schedule</h2>
-        <Button size="sm" variant="outline" onClick={fetchData} disabled={loading}>
+        <Button size="sm" variant="outline" onClick={() => fetchData({ fresh: true })} disabled={loading}>
             <RefreshCw className={loading ? "animate-spin" : ""} />
         </Button>
       </div>

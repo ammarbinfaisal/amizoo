@@ -26,7 +26,7 @@ export function DashboardProvider({ children }: { children: React.ReactNode }) {
   const [error, setError] = useState<string | null>(null);
   const router = useRouter();
 
-  const fetchData = useCallback(async () => {
+  const fetchData = useCallback(async ({ fresh }: { fresh?: boolean } = {}) => {
     const credentials = getLocalCredentials();
     if (!credentials) {
       router.push("/login");
@@ -37,14 +37,15 @@ export function DashboardProvider({ children }: { children: React.ReactNode }) {
     setError(null);
 
     const today = new Date().toISOString().split("T")[0];
+    const init = fresh ? ({ cache: "no-store" } as const) : undefined;
 
     try {
       const [p, a, s, w] = await Promise.all([
-        amizoneApi.getProfile(credentials).catch(() => null),
-        amizoneApi.getAttendance(credentials).catch(() => null),
-        amizoneApi.getClassSchedule(credentials, today).catch(() => null),
-        amizoneApi.getWifiMacInfo(credentials).catch(async () => {
-            const legacy = await amizoneApi.getWifiInfo(credentials).catch(() => null);
+        amizoneApi.getProfile(credentials, init).catch(() => null),
+        amizoneApi.getAttendance(credentials, init).catch(() => null),
+        amizoneApi.getClassSchedule(credentials, today, fresh ? { fresh: true } : undefined).catch(() => null),
+        amizoneApi.getWifiMacInfo(credentials, init).catch(async () => {
+            const legacy = await amizoneApi.getWifiInfo(credentials, init).catch(() => null);
             if (legacy?.macAddress) return { addresses: [legacy.macAddress], slots: 0, freeSlots: 0 };
             return null;
         }),
@@ -54,7 +55,7 @@ export function DashboardProvider({ children }: { children: React.ReactNode }) {
       setAttendance(a);
       setSchedule(s);
       setWifiMac(w);
-    } catch (e) {
+    } catch {
       setError("Failed to load dashboard data");
     } finally {
       setLoading(false);
@@ -62,11 +63,11 @@ export function DashboardProvider({ children }: { children: React.ReactNode }) {
   }, [router]);
 
   useEffect(() => {
-    fetchData();
+    fetchData({ fresh: false });
   }, [fetchData]);
 
   return (
-    <DashboardContext.Provider value={{ profile, attendance, schedule, wifiMac, loading, refresh: fetchData, error }}>
+    <DashboardContext.Provider value={{ profile, attendance, schedule, wifiMac, loading, refresh: () => fetchData({ fresh: true }), error }}>
       {children}
     </DashboardContext.Provider>
   );

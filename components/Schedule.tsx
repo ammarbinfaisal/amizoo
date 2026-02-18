@@ -76,12 +76,6 @@ export function Schedule({ schedule, date }: { schedule: ScheduledClasses; date?
                         Cancelled
                       </Badge>
                     )}
-                    <Badge
-                      variant={getBadgeVariant(cls.attendance)}
-                      className="font-black uppercase text-[8px] sm:text-[10px] px-2 sm:px-3 py-0.5 sm:py-1 shrink-0"
-                    >
-                      {cls.attendance}
-                    </Badge>
                   </div>
                 </div>
                 <div className="flex flex-col sm:flex-row sm:flex-wrap gap-x-6 gap-y-1 text-[10px] sm:text-xs font-medium text-muted-foreground">
@@ -92,6 +86,17 @@ export function Schedule({ schedule, date }: { schedule: ScheduledClasses; date?
                   <div className="flex items-center gap-1.5 shrink-0">
                     <MapPin className="h-3 w-3 sm:h-3.5 sm:w-3.5 shrink-0" />
                     <span>{cls.room}</span>
+                    <span
+                      className={cn(
+                        "ml-1 text-[9px] sm:text-[10px] font-black uppercase tracking-widest",
+                        cls.attendance === "PRESENT" && "text-primary",
+                        cls.attendance === "ABSENT" && "text-destructive",
+                        cls.attendance === "PENDING" && "text-muted-foreground",
+                        (cls.attendance === "NA" || cls.attendance === "INVALID") && "text-muted-foreground/70"
+                      )}
+                    >
+                      • {cls.attendance}
+                    </span>
                   </div>
                 </div>
                 {isCancelled && (
@@ -106,13 +111,4 @@ export function Schedule({ schedule, date }: { schedule: ScheduledClasses; date?
       })}
     </div>
   );
-}
-
-function getBadgeVariant(state: string): "default" | "secondary" | "destructive" | "outline" {
-  switch (state) {
-    case "PRESENT": return "default"; // Will be black/primary
-    case "ABSENT": return "destructive";
-    case "PENDING": return "secondary"; // Will be burlywood
-    default: return "outline";
-  }
 }
