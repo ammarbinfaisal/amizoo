@@ -1,12 +1,37 @@
+"use client";
+
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
-import { Github, BarChart, Info, ExternalLink } from "lucide-react";
+import { Github, BarChart, Info, ExternalLink, Copy } from "lucide-react";
 import Link from "next/link";
+import { toast } from "sonner";
 
 const GRAFANA_DASHBOARD_URL =
   "https://grafana.ami.zoo.fullstacktics.com/d/amizone-overview/amizone-overview?orgId=1";
-const GRAFANA_AUTO_LOGIN_URL =
-  "https://public:public@grafana.ami.zoo.fullstacktics.com/d/amizone-overview/amizone-overview?orgId=1";
+
+async function copyToClipboard(value: string) {
+  try {
+    await navigator.clipboard.writeText(value);
+    return true;
+  } catch {
+    // Fallback for older browsers / non-secure contexts.
+    try {
+      const el = document.createElement("textarea");
+      el.value = value;
+      el.style.position = "fixed";
+      el.style.left = "-10000px";
+      el.style.top = "0";
+      document.body.appendChild(el);
+      el.focus();
+      el.select();
+      const ok = document.execCommand("copy");
+      document.body.removeChild(el);
+      return ok;
+    } catch {
+      return false;
+    }
+  }
+}
 
 export default function AboutPage() {
   return (
@@ -53,20 +78,40 @@ export default function AboutPage() {
             </p>
             <div className="pt-2">
               <Button asChild variant="outline" className="w-full border-2 font-bold uppercase text-[10px] tracking-widest gap-2">
-                <Link href={GRAFANA_AUTO_LOGIN_URL} target="_blank">
+                <Link href={GRAFANA_DASHBOARD_URL} target="_blank">
                   View Grafana Dashboard <ExternalLink className="h-3 w-3" />
                 </Link>
               </Button>
-              <p className="text-[9px] text-center mt-2 text-muted-foreground font-bold normal-case">
-                Credentials: <code className="font-mono text-[10px]">public / public</code>
-              </p>
-              <p className="text-[9px] text-center mt-1 text-muted-foreground">
-                If auto-login is blocked by your browser, open{" "}
-                <Link href={GRAFANA_DASHBOARD_URL} target="_blank" className="underline">
-                  the direct dashboard link
-                </Link>
-                .
-              </p>
+              <div className="mt-3 grid gap-2">
+                <div className="flex items-center justify-center gap-2 text-[9px] uppercase tracking-widest text-muted-foreground font-bold">
+                  <span>Username:</span>
+                  <button
+                    type="button"
+                    onClick={async () => {
+                      const ok = await copyToClipboard("public");
+                      toast[ok ? "success" : "error"](ok ? "Username copied" : "Failed to copy username");
+                    }}
+                    className="inline-flex items-center gap-1 rounded-md border bg-muted px-2 py-1 font-mono text-[11px] normal-case text-foreground hover:bg-muted/70"
+                    title="Click to copy"
+                  >
+                    public <Copy className="h-3 w-3 opacity-70" />
+                  </button>
+                </div>
+                <div className="flex items-center justify-center gap-2 text-[9px] uppercase tracking-widest text-muted-foreground font-bold">
+                  <span>Password:</span>
+                  <button
+                    type="button"
+                    onClick={async () => {
+                      const ok = await copyToClipboard("public");
+                      toast[ok ? "success" : "error"](ok ? "Password copied" : "Failed to copy password");
+                    }}
+                    className="inline-flex items-center gap-1 rounded-md border bg-muted px-2 py-1 font-mono text-[11px] normal-case text-foreground hover:bg-muted/70"
+                    title="Click to copy"
+                  >
+                    public <Copy className="h-3 w-3 opacity-70" />
+                  </button>
+                </div>
+              </div>
             </div>
           </CardContent>
         </Card>
