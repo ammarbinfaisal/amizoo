@@ -15,6 +15,8 @@ import { type, Type } from "arktype";
 
 const rawApiUrl = process.env.NEXT_PUBLIC_AMIZONE_API_URL || "https://api.ami.zoo.fullstacktics.com";
 const API_URL = rawApiUrl.startsWith("http") ? rawApiUrl : `https://${rawApiUrl}`;
+const CACHE_PREFIX = "amizoo:api-cache:v1";
+const isBrowser = typeof window !== "undefined";
 
 export interface Credentials {
   username: string;
@@ -25,6 +27,51 @@ export type AmizoneRequestInit = Omit<RequestInit, "headers"> & { headers?: Reco
 
 interface ScheduleFetchOptions {
   fresh?: boolean;
+}
+
+function normalizeEndpoint(endpoint: string) {
+  const url = new URL(endpoint, API_URL);
+  url.searchParams.delete("refresh");
+  return url.toString();
+}
+
+function getCacheKey(creds: Credentials, endpoint: string, method: string) {
+  const normalized = normalizeEndpoint(endpoint);
+  return `${CACHE_PREFIX}:${creds.username}:${method}:${normalized}`;
+}
+
+function readCache<T>(key: string): { data: T; timestamp: number } | null {
+  if (!isBrowser) return null;
+  let raw: string | null = null;
+  try {
+    raw = localStorage.getItem(key);
+  } catch {
+    return null;
+  }
+  if (!raw) return null;
+  try {
+    return JSON.parse(raw) as { data: T; timestamp: number };
+  } catch {
+    localStorage.removeItem(key);
+    return null;
+  }
+}
+
+function writeCache<T>(key: string, data: T) {
+  if (!isBrowser) return;
+  try {
+    localStorage.setItem(key, JSON.stringify({ data, timestamp: Date.now() }));
+  } catch {
+    // Ignore quota errors and keep app responsive.
+  }
+}
+
+function isNetworkError(error: unknown) {
+  if (!isBrowser) return false;
+  if (navigator.onLine === false) return true;
+  if (error instanceof TypeError) return true;
+  const message = error instanceof Error ? error.message : "";
+  return message.includes("Failed to fetch") || message.includes("NetworkError");
 }
 
 export function getLocalCredentials(): Credentials | null {
@@ -46,14 +93,51 @@ export async function fetchFromAmizone<T>(
     throw new Error("No credentials provided");
   }
 
+  const method = (init?.method || "GET").toUpperCase();
+  const canUseCache = isBrowser && method === "GET";
+  const cacheKey = canUseCache ? getCacheKey(creds, endpoint, method) : null;
+
+  if (canUseCache && navigator.onLine === false) {
+    const cached = cacheKey ? readCache<T>(cacheKey) : null;
+    if (cached) {
+      if (schema) {
+        const result = schema(cached.data);
+        if (result instanceof type.errors) {
+          throw new Error(result.summary);
+        }
+        return result as T;
+      }
+      return cached.data;
+    }
+    throw new Error("Offline with no cached data available");
+  }
+
   const auth = btoa(`${creds.username}:${creds.password}`);
-  const response = await fetch(`${API_URL}${endpoint}`, {
-    ...init,
-    headers: {
-      Authorization: `Basic ${auth}`,
-      ...(init?.headers || {}),
-    },
-  });
+  let response: Response;
+  try {
+    response = await fetch(`${API_URL}${endpoint}`, {
+      ...init,
+      headers: {
+        Authorization: `Basic ${auth}`,
+        ...(init?.headers || {}),
+      },
+    });
+  } catch (error) {
+    if (canUseCache && cacheKey && isNetworkError(error)) {
+      const cached = readCache<T>(cacheKey);
+      if (cached) {
+        if (schema) {
+          const result = schema(cached.data);
+          if (result instanceof type.errors) {
+            throw new Error(result.summary);
+          }
+          return result as T;
+        }
+        return cached.data;
+      }
+    }
+    throw error;
+  }
 
   if (!response.ok) {
     if (response.status === 401) {
@@ -64,16 +148,21 @@ export async function fetchFromAmizone<T>(
   }
 
   const data = await response.json();
-  
+
+  let parsed = data as T;
   if (schema) {
     const result = schema(data);
     if (result instanceof type.errors) {
       throw new Error(result.summary);
     }
-    return result as T;
+    parsed = result as T;
   }
 
-  return data;
+  if (canUseCache && cacheKey) {
+    writeCache(cacheKey, parsed);
+  }
+
+  return parsed;
 }
 
 export const amizoneApi = {

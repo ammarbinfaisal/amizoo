@@ -2,12 +2,13 @@
 
 import { DashboardProvider, useDashboard } from "@/lib/dashboard-context";
 import { DesktopNav, MobileNav, TabNav } from "@/components/Navigation";
-import { GraduationCap, LogOut } from "lucide-react";
+import { CloudOff, GraduationCap, LogOut } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { useRouter } from "next/navigation";
 import { Skeleton } from "@/components/ui/skeleton";
 import { PWAInstallPrompt } from "@/components/PWAInstallPrompt";
 import React from "react";
+import { useOnlineStatus } from "@/lib/use-online-status";
 
 export default function DashboardLayout({
   tabs,
@@ -52,6 +53,7 @@ export default function DashboardLayout({
 function DashboardHeader() {
   const { profile, loading } = useDashboard();
   const router = useRouter();
+  const isOnline = useOnlineStatus();
 
   const handleLogout = () => {
     localStorage.removeItem("amizone_user");
@@ -76,6 +78,16 @@ function DashboardHeader() {
             <div className="hidden md:flex flex-col items-end mr-2">
               <span className="text-sm font-bold">{profile.name}</span>
               <span className="text-[10px] text-muted-foreground uppercase tracking-wider">{profile.enrollmentNumber}</span>
+            </div>
+          ) : null}
+          {!isOnline ? (
+            <div
+              className="flex items-center gap-1.5 rounded-full border border-yellow-400/70 bg-yellow-50/80 px-2.5 py-1 text-[10px] font-semibold uppercase tracking-wider text-yellow-700"
+              title="Offline"
+              aria-label="Offline"
+            >
+              <CloudOff className="h-3.5 w-3.5" />
+              <span>Offline</span>
             </div>
           ) : null}
           <PWAInstallPrompt />
