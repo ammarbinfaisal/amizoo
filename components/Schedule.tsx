@@ -73,11 +73,6 @@ export function Schedule({
                     >
                       {courseName}
                     </h4>
-                    {isCancelled && (
-                      <p className="text-[9px] sm:text-[10px] font-bold uppercase tracking-[0.3em] text-destructive">
-                        Cancelled
-                      </p>
-                    )}
                   </div>
                   <div className="flex items-center gap-2 shrink-0">
                     {status && <StatusBadge status={status} />}
@@ -106,11 +101,6 @@ export function Schedule({
                     )}
                   </div>
                 </div>
-                {isCancelled && (
-                  <p className="mt-3 text-[9px] sm:text-[10px] font-bold uppercase tracking-widest text-destructive/80">
-                    This slot is marked as cancelled—check with faculty for updates.
-                  </p>
-                )}
               </div>
             </CardContent>
           </Card>
