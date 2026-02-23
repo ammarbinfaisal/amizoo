@@ -1,4 +1,4 @@
-import { Attendance, ScheduledClasses } from "@/lib/types";
+import { Attendance, AttendanceState, ScheduledClass, ScheduledClasses } from "@/lib/types";
 import { cn } from "@/lib/utils";
 import { Card, CardContent } from "@/components/ui/card";
 import { AlertTriangle, Clock, MapPin, User } from "lucide-react";
@@ -29,7 +29,8 @@ export function Schedule({
   return (
     <div className="grid gap-3">
       {schedule.classes.map((cls, i) => {
-        const isCancelled = Boolean(cls.cancelled);
+        const status = getClassStatus(cls);
+        const isCancelled = status === "CANCELLED";
         const courseName = cls.course.name.includes(" - ") ? cls.course.name.split(" - ")[1] : cls.course.name;
         const attendance = attendanceByCourse?.[cls.course.code];
 
@@ -79,11 +80,7 @@ export function Schedule({
                     )}
                   </div>
                   <div className="flex items-center gap-2 shrink-0">
-                    {isCancelled && (
-                      <span className="font-black uppercase text-[8px] sm:text-[10px] px-2 sm:px-3 py-0.5 sm:py-1 border border-destructive/40 text-destructive rounded-md">
-                        Cancelled
-                      </span>
-                    )}
+                    {status && <StatusBadge status={status} />}
                   </div>
                 </div>
                 <div className="flex flex-col sm:flex-row sm:flex-wrap gap-x-6 gap-y-1 text-[10px] sm:text-xs font-medium text-muted-foreground">
@@ -120,6 +117,49 @@ export function Schedule({
         );
       })}
     </div>
+  );
+}
+
+function getClassStatus(cls: ScheduledClass) {
+  if (cls.cancelled) return "CANCELLED";
+  if (cls.attendance === AttendanceState.PRESENT) return "PRESENT";
+  if (cls.attendance === AttendanceState.ABSENT) return "ABSENT";
+
+  if (cls.attendance === AttendanceState.PENDING) {
+    const now = new Date();
+    const start = new Date(cls.startTime);
+    const end = new Date(cls.endTime);
+
+    // Only show PENDING if it's today
+    const isToday = start.toDateString() === now.toDateString();
+    if (isToday) {
+      const midPoint = start.getTime() + (end.getTime() - start.getTime()) / 2;
+      if (now.getTime() > midPoint) {
+        return "PENDING";
+      }
+    }
+  }
+
+  return null;
+}
+
+function StatusBadge({ status }: { status: string }) {
+  const variants: Record<string, string> = {
+    CANCELLED: "border-destructive/40 text-destructive bg-destructive/5",
+    PRESENT: "border-emerald-500/40 text-emerald-700 bg-emerald-50/50",
+    ABSENT: "border-rose-500/40 text-rose-700 bg-rose-50/50",
+    PENDING: "border-amber-500/40 text-amber-700 bg-amber-50/50",
+  };
+
+  return (
+    <span
+      className={cn(
+        "font-black uppercase text-[8px] sm:text-[10px] px-2 sm:px-3 py-0.5 sm:py-1 border rounded-md shrink-0",
+        variants[status] || "border-muted-foreground/40 text-muted-foreground"
+      )}
+    >
+      {status}
+    </span>
   );
 }
 
