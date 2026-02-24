@@ -37,3 +37,99 @@ export function formatDateLabel(date: Date): string {
     day: 'numeric'
   });
 }
+
+export const IST_TIME_ZONE = "Asia/Kolkata";
+
+type TzDateParts = {
+  year: number;
+  month: number;
+  day: number;
+  hour?: number;
+  minute?: number;
+};
+
+function getDatePartsInTimeZone(date: Date, timeZone: string, includeTime = false): TzDateParts {
+  const formatter = new Intl.DateTimeFormat("en-US", {
+    timeZone,
+    year: "numeric",
+    month: "2-digit",
+    day: "2-digit",
+    ...(includeTime ? { hour: "2-digit", minute: "2-digit", hourCycle: "h23" as const } : null),
+  });
+
+  const parts = formatter.formatToParts(date);
+  const part = (type: Intl.DateTimeFormatPartTypes) => parts.find((p) => p.type === type)?.value;
+
+  const year = Number(part("year"));
+  const month = Number(part("month"));
+  const day = Number(part("day"));
+  const hour = includeTime ? Number(part("hour")) : undefined;
+  const minute = includeTime ? Number(part("minute")) : undefined;
+
+  if (!Number.isFinite(year) || !Number.isFinite(month) || !Number.isFinite(day)) {
+    // Fallback to local date parts; should be rare, but prevents hard crashes.
+    return {
+      year: date.getFullYear(),
+      month: date.getMonth() + 1,
+      day: date.getDate(),
+      ...(includeTime ? { hour: date.getHours(), minute: date.getMinutes() } : null),
+    };
+  }
+
+  return {
+    year,
+    month,
+    day,
+    ...(includeTime && Number.isFinite(hour) && Number.isFinite(minute) ? { hour, minute } : null),
+  };
+}
+
+export function formatISODateInTimeZone(date: Date, timeZone: string): string {
+  const { year, month, day } = getDatePartsInTimeZone(date, timeZone);
+  return `${String(year).padStart(4, "0")}-${String(month).padStart(2, "0")}-${String(day).padStart(2, "0")}`;
+}
+
+export function formatISODateInIST(date: Date): string {
+  return formatISODateInTimeZone(date, IST_TIME_ZONE);
+}
+
+export function isSameDateInTimeZone(a: Date, b: Date, timeZone: string): boolean {
+  const ap = getDatePartsInTimeZone(a, timeZone);
+  const bp = getDatePartsInTimeZone(b, timeZone);
+  return ap.year === bp.year && ap.month === bp.month && ap.day === bp.day;
+}
+
+export function isTodayInIST(date: Date): boolean {
+  return isSameDateInTimeZone(date, new Date(), IST_TIME_ZONE);
+}
+
+export function getMinutesInIST(date: Date): number {
+  const { hour = 0, minute = 0 } = getDatePartsInTimeZone(date, IST_TIME_ZONE, true);
+  return hour * 60 + minute;
+}
+
+export function differenceInCalendarDaysIST(a: Date, b: Date): number {
+  const ap = getDatePartsInTimeZone(a, IST_TIME_ZONE);
+  const bp = getDatePartsInTimeZone(b, IST_TIME_ZONE);
+  const aUTC = Date.UTC(ap.year, ap.month - 1, ap.day);
+  const bUTC = Date.UTC(bp.year, bp.month - 1, bp.day);
+  return Math.round((aUTC - bUTC) / 86_400_000);
+}
+
+export function formatShortDateLabelIST(date: Date): string {
+  return new Intl.DateTimeFormat("en-US", {
+    timeZone: IST_TIME_ZONE,
+    weekday: "short",
+    month: "short",
+    day: "numeric",
+  }).format(date);
+}
+
+export function formatLongDateLabelIST(date: Date): string {
+  return new Intl.DateTimeFormat("en-US", {
+    timeZone: IST_TIME_ZONE,
+    weekday: "long",
+    month: "short",
+    day: "numeric",
+  }).format(date);
+}

@@ -1,9 +1,8 @@
 import { Attendance, AttendanceState, ScheduledClass, ScheduledClasses } from "@/lib/types";
 import { cn } from "@/lib/utils";
 import { Card, CardContent } from "@/components/ui/card";
-import { AlertTriangle, Clock, MapPin, User } from "lucide-react";
-import { formatAmizoneTime, formatClassRange } from "@/lib/date-utils";
-import { format } from "date-fns";
+import { AlertTriangle, Clock, ListChecks, MapPin, Percent, User } from "lucide-react";
+import { formatAmizoneTime, formatClassRange, formatISODateInIST, formatLongDateLabelIST, getMinutesInIST } from "@/lib/date-utils";
 
 export function Schedule({
   schedule,
@@ -15,7 +14,7 @@ export function Schedule({
   attendanceByCourse?: Record<string, Attendance> | null;
 }) {
   if (schedule.classes.length === 0) {
-    const dateStr = date ? format(date, "EEEE, MMM d") : "today";
+    const dateStr = date ? formatLongDateLabelIST(date) : "today";
     return (
       <Card className="border-dashed" noPadding>
         <CardContent className="flex flex-col items-center justify-center p-12 text-center">
@@ -88,11 +87,18 @@ export function Schedule({
                     <span>{cls.room}</span>
                     {attendance ? (
                       <>
-                        <span className={cn("text-[9px] sm:text-[10px] font-normal tabular-nums flex items-center gap-1", getAttendanceColor(attendance))}>
+                        <span
+                          className={cn(
+                            "ml-1 text-[10px] sm:text-[11px] font-semibold tabular-nums flex items-center gap-1",
+                            getAttendanceColor(attendance)
+                          )}
+                        >
                           {isCriticalAttendance(attendance) && <AlertTriangle className="h-3 w-3" />}
+                          <Percent className="h-3 w-3 opacity-70" />
                           {calculatePercentage(attendance)}%
                         </span>
-                        <span className="text-[9px] sm:text-[10px] font-normal tabular-nums text-muted-foreground">
+                        <span className="text-[10px] sm:text-[11px] font-semibold tabular-nums text-muted-foreground flex items-center gap-1">
+                          <ListChecks className="h-3 w-3 opacity-70" />
                           {attendance.attended}/{attendance.held}
                         </span>
                       </>
@@ -117,15 +123,28 @@ function getClassStatus(cls: ScheduledClass) {
 
   if (cls.attendance === AttendanceState.PENDING) {
     const now = new Date();
-    const start = new Date(cls.startTime);
-    const end = new Date(cls.endTime);
+    const todayIst = formatISODateInIST(now);
+    const startDate = cls.startTime?.includes("T") ? cls.startTime.split("T")[0] : "";
 
-    // Only show PENDING if it's today
-    const isToday = start.toDateString() === now.toDateString();
-    if (isToday) {
-      const midPoint = start.getTime() + (end.getTime() - start.getTime()) / 2;
-      if (now.getTime() > midPoint) {
-        return "PENDING";
+    // Only show PENDING if it's today (IST)
+    if (startDate === todayIst) {
+      const toMinutes = (ts: string): number | null => {
+        const raw = ts.includes("T") ? ts.split("T")[1] : ts;
+        const hhmm = raw.substring(0, 5);
+        const [hh, mm] = hhmm.split(":");
+        const hour = Number(hh);
+        const minute = Number(mm);
+        if (!Number.isFinite(hour) || !Number.isFinite(minute)) return null;
+        return hour * 60 + minute;
+      };
+
+      const startMinutes = toMinutes(cls.startTime);
+      const endMinutes = toMinutes(cls.endTime);
+      const nowMinutes = getMinutesInIST(now);
+
+      if (startMinutes != null && endMinutes != null) {
+        const midPointMinutes = startMinutes + (endMinutes - startMinutes) / 2;
+        if (nowMinutes > midPointMinutes) return "PENDING";
       }
     }
   }

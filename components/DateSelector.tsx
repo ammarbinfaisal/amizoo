@@ -4,9 +4,10 @@ import { Button } from "@/components/ui/button";
 import { Calendar } from "@/components/ui/calendar";
 import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
 import { cn } from "@/lib/utils";
-import { format, addDays, subDays, isToday } from "date-fns";
+import { addDays, subDays } from "date-fns";
 import { Calendar as CalendarIcon, ChevronLeft, ChevronRight, RotateCcw } from "lucide-react";
 import * as React from "react";
+import { formatShortDateLabelIST, isTodayInIST } from "@/lib/date-utils";
 
 interface DateSelectorProps {
   date: Date;
@@ -16,7 +17,7 @@ interface DateSelectorProps {
 export function DateSelector({ date, onChange }: DateSelectorProps) {
   return (
     <div className="flex items-center gap-2">
-      {!isToday(date) && (
+      {!isTodayInIST(date) && (
         <Button
           variant="outline"
           size="icon"
@@ -27,7 +28,7 @@ export function DateSelector({ date, onChange }: DateSelectorProps) {
         </Button>
       )}
 
-      {!isToday(date) && (
+      {!isTodayInIST(date) && (
         <Button
           variant="outline"
           size="sm"
@@ -60,7 +61,7 @@ export function DateSelector({ date, onChange }: DateSelectorProps) {
               )}
             >
               <CalendarIcon className="mr-2 h-3 w-3" />
-              {isToday(date) ? "Today" : format(date, "EEE, MMM d")}
+              {isTodayInIST(date) ? "Today" : formatShortDateLabelIST(date)}
             </Button>
           </PopoverTrigger>
           <PopoverContent className="w-auto p-0" align="start">

@@ -4,6 +4,7 @@ import React, { createContext, useContext, useState, useEffect, useCallback } fr
 import { amizoneApi, getLocalCredentials } from "@/lib/api";
 import { Profile, AttendanceRecords, ScheduledClasses, WifiMacInfo } from "@/lib/types";
 import { useRouter } from "next/navigation";
+import { formatISODateInIST } from "@/lib/date-utils";
 
 interface DashboardContextType {
   profile: Profile | null;
@@ -36,7 +37,7 @@ export function DashboardProvider({ children }: { children: React.ReactNode }) {
     setLoading(true);
     setError(null);
 
-    const today = new Date().toISOString().split("T")[0];
+    const today = formatISODateInIST(new Date());
     const init = fresh ? ({ cache: "no-store" } as const) : undefined;
 
     try {

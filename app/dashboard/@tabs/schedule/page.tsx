@@ -9,16 +9,14 @@ import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/com
 import { Button } from "@/components/ui/button";
 import { RefreshCw } from "lucide-react";
 import { Skeleton } from "@/components/ui/skeleton";
-import { differenceInCalendarDays } from "date-fns";
+import { differenceInCalendarDaysIST, formatISODateInIST, getMinutesInIST } from "@/lib/date-utils";
 
 const SCHEDULE_PUBLISH_CUTOFF_HOUR = Number(process.env.NEXT_PUBLIC_SCHEDULE_PUBLISH_CUTOFF_HOUR ?? "15");
 const SCHEDULE_PUBLISH_CUTOFF_MINUTE = Number(process.env.NEXT_PUBLIC_SCHEDULE_PUBLISH_CUTOFF_MINUTE ?? "15");
 
 function shouldForceFreshSchedule(selectedDate: Date, now: Date): boolean {
-  const today = new Date(now.getFullYear(), now.getMonth(), now.getDate());
-  const selected = new Date(selectedDate.getFullYear(), selectedDate.getMonth(), selectedDate.getDate());
-  const dayDiff = differenceInCalendarDays(selected, today);
-  const minutesNow = now.getHours() * 60 + now.getMinutes();
+  const dayDiff = differenceInCalendarDaysIST(selectedDate, now);
+  const minutesNow = getMinutesInIST(now);
   const cutoffMinutes = SCHEDULE_PUBLISH_CUTOFF_HOUR * 60 + SCHEDULE_PUBLISH_CUTOFF_MINUTE;
 
   return dayDiff >= 1 && minutesNow >= cutoffMinutes;
@@ -37,7 +35,7 @@ export default function ScheduleTab() {
 
     setLoading(true);
     setError(null);
-    const dateStr = d.toISOString().split("T")[0];
+    const dateStr = formatISODateInIST(d);
     const forceFresh = shouldForceFreshSchedule(d, new Date());
     const fresh = Boolean(opts?.fresh) || forceFresh;
 
