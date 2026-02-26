@@ -9,6 +9,7 @@ import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/com
 import { Button } from "@/components/ui/button";
 import { RefreshCw } from "lucide-react";
 import { Skeleton } from "@/components/ui/skeleton";
+import { RefreshSkeletonOverlay } from "@/components/ui/refresh-skeleton-overlay";
 import { differenceInCalendarDaysIST, formatISODateInIST, getMinutesInIST } from "@/lib/date-utils";
 
 const SCHEDULE_PUBLISH_CUTOFF_HOUR = Number(process.env.NEXT_PUBLIC_SCHEDULE_PUBLISH_CUTOFF_HOUR ?? "15");
@@ -75,6 +76,9 @@ export default function ScheduleTab() {
       return acc;
     }, {});
   }, [attendance]);
+  const isInitialLoading = loading && !schedule;
+  const hasSchedule = Boolean(schedule);
+  const showBlockingError = Boolean(error && !schedule);
 
   return (
     <div className="space-y-4">
@@ -105,13 +109,13 @@ export default function ScheduleTab() {
         </div>
       </div>
 
-      {loading ? (
+      {isInitialLoading ? (
         <div className="space-y-3">
           <Skeleton className="h-24 w-full" />
           <Skeleton className="h-24 w-full" />
           <Skeleton className="h-24 w-full" />
         </div>
-      ) : error ? (
+      ) : showBlockingError ? (
         <Card className="border-destructive/20 bg-destructive/5">
           <CardHeader className="text-center">
             <CardTitle className="text-destructive text-sm">Schedule Unavailable</CardTitle>
@@ -124,7 +128,19 @@ export default function ScheduleTab() {
           </CardContent>
         </Card>
       ) : schedule ? (
-        <Schedule schedule={schedule} date={date} attendanceByCourse={attendanceByCourse} />
+        <RefreshSkeletonOverlay
+          loading={loading}
+          hasData={hasSchedule}
+          skeleton={
+            <div className="space-y-3">
+              <Skeleton className="h-24 w-full" />
+              <Skeleton className="h-24 w-full" />
+              <Skeleton className="h-24 w-full" />
+            </div>
+          }
+        >
+          <Schedule schedule={schedule} date={date} attendanceByCourse={attendanceByCourse} />
+        </RefreshSkeletonOverlay>
       ) : null}
     </div>
   );

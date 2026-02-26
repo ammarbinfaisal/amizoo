@@ -7,6 +7,7 @@ import { Card, CardContent } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { FileText, RefreshCw } from "lucide-react";
 import { Skeleton } from "@/components/ui/skeleton";
+import { RefreshSkeletonOverlay } from "@/components/ui/refresh-skeleton-overlay";
 
 type NormalizedExamItem = {
   course: CourseRef;
@@ -43,7 +44,7 @@ export default function ExamsTab() {
     fetchData({ fresh: false });
   }, [fetchData]);
 
-  if (loading) {
+  if (loading && exams.length === 0) {
     return (
       <div className="space-y-4">
         <Skeleton className="h-24 w-full" />
@@ -66,27 +67,38 @@ export default function ExamsTab() {
           <CardContent className="p-6 text-center text-sm text-destructive font-bold">{error}</CardContent>
         </Card>
       ) : exams.length > 0 ? (
-        <div className="grid gap-3 sm:gap-4">
-          {exams.map((exam, i) => (
-            <Card key={i} className="overflow-hidden border-border bg-card shadow-sm">
-              <CardContent className="p-4 sm:p-6 flex flex-row justify-between items-center gap-4">
-                <div className="min-w-0">
-                  <h4 className="font-black text-primary uppercase tracking-tight truncate sm:whitespace-normal">{exam.course.name}</h4>
-                  <p className="text-[10px] sm:text-xs text-muted-foreground font-bold uppercase tracking-wider">{exam.course.code}</p>
-                  {(exam.mode || exam.location) && (
-                    <p className="text-[9px] sm:text-[10px] text-muted-foreground font-bold uppercase tracking-wider mt-1 truncate">
-                      {[exam.mode, exam.location].filter(Boolean).join(" • ")}
-                    </p>
-                  )}
-                </div>
-                <div className="text-right shrink-0">
-                  <div className="text-xs sm:text-sm font-black text-primary whitespace-nowrap">{exam.dateLabel}</div>
-                  <div className="text-[9px] sm:text-[10px] text-muted-foreground font-bold uppercase whitespace-nowrap">{exam.timeLabel}</div>
-                </div>
-              </CardContent>
-            </Card>
-          ))}
-        </div>
+        <RefreshSkeletonOverlay
+          loading={loading}
+          hasData={exams.length > 0}
+          skeleton={
+            <div className="space-y-3">
+              <Skeleton className="h-24 w-full" />
+              <Skeleton className="h-24 w-full" />
+            </div>
+          }
+        >
+          <div className="grid gap-3 sm:gap-4">
+            {exams.map((exam, i) => (
+              <Card key={i} className="overflow-hidden border-border bg-card shadow-sm">
+                <CardContent className="p-4 sm:p-6 flex flex-row justify-between items-center gap-4">
+                  <div className="min-w-0">
+                    <h4 className="font-black text-primary uppercase tracking-tight truncate sm:whitespace-normal">{exam.course.name}</h4>
+                    <p className="text-[10px] sm:text-xs text-muted-foreground font-bold uppercase tracking-wider">{exam.course.code}</p>
+                    {(exam.mode || exam.location) && (
+                      <p className="text-[9px] sm:text-[10px] text-muted-foreground font-bold uppercase tracking-wider mt-1 truncate">
+                        {[exam.mode, exam.location].filter(Boolean).join(" • ")}
+                      </p>
+                    )}
+                  </div>
+                  <div className="text-right shrink-0">
+                    <div className="text-xs sm:text-sm font-black text-primary whitespace-nowrap">{exam.dateLabel}</div>
+                    <div className="text-[9px] sm:text-[10px] text-muted-foreground font-bold uppercase whitespace-nowrap">{exam.timeLabel}</div>
+                  </div>
+                </CardContent>
+              </Card>
+            ))}
+          </div>
+        </RefreshSkeletonOverlay>
       ) : (
         <Card className="border-dashed">
           <CardContent className="flex flex-col items-center justify-center p-12 text-center">
