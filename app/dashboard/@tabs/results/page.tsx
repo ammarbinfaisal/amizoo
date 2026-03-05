@@ -48,12 +48,6 @@ export default function ResultsTab() {
     <RefreshSkeletonOverlay
       loading={loading}
       hasData={Boolean(data)}
-      skeleton={
-        <div className="space-y-4">
-          <Skeleton className="h-24 w-full" />
-          <Skeleton className="h-[320px] w-full" />
-        </div>
-      }
     >
       <div className="space-y-6">
         <div>
@@ -103,7 +97,7 @@ export default function ResultsTab() {
 
         {loading && !data ? (
           <Skeleton className="h-[400px] w-full" />
-        ) : error ? (
+        ) : error && !data ? (
           <Card className="border-destructive/20 bg-destructive/5 p-12 text-center">
               <p className="text-destructive font-bold mb-4">{error}</p>
               <Button onClick={() => fetchData(semesterRef, { fresh: true })} variant="outline">Retry</Button>

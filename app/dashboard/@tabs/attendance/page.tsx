@@ -44,15 +44,6 @@ export default function AttendanceTab() {
     <RefreshSkeletonOverlay
       loading={loading}
       hasData={Boolean(attendance)}
-      skeleton={
-        <div className="space-y-4">
-          <Skeleton className="h-8 w-44" />
-          <Skeleton className="h-10 w-full" />
-          <Skeleton className="h-10 w-full" />
-          <Skeleton className="h-10 w-full" />
-        </div>
-      }
-      overlayClassName="p-4 md:p-6"
     >
       <Card className="border-border shadow-sm py-4 md:py-6">
         <CardHeader className="pb-0 px-4 md:px-6">

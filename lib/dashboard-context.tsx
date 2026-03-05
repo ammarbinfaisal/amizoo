@@ -52,10 +52,10 @@ export function DashboardProvider({ children }: { children: React.ReactNode }) {
         }),
       ]);
 
-      setProfile(p);
-      setAttendance(a);
-      setSchedule(s);
-      setWifiMac(w);
+      if (p) setProfile(p);
+      if (a) setAttendance(a);
+      if (s) setSchedule(s);
+      if (w) setWifiMac(w);
     } catch {
       setError("Failed to load dashboard data");
     } finally {

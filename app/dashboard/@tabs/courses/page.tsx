@@ -60,16 +60,6 @@ export default function CoursesTab() {
     <RefreshSkeletonOverlay
       loading={loading}
       hasData={Boolean(courses)}
-      skeleton={
-        <div className="space-y-4">
-          <Skeleton className="h-24 w-full" />
-          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
-            <Skeleton className="h-48 w-full" />
-            <Skeleton className="h-48 w-full" />
-            <Skeleton className="h-48 w-full" />
-          </div>
-        </div>
-      }
     >
       <div className="space-y-6">
         <Card className="border-border shadow-sm">
@@ -112,12 +102,13 @@ export default function CoursesTab() {
           </CardContent>
         </Card>
 
-        {error ? (
+        {error && !courses && (
           <Card className="border-destructive/20 bg-destructive/5 py-4 md:py-6 p-8 md:p-12 text-center">
               <p className="text-destructive font-bold mb-4">{error}</p>
               <Button onClick={() => fetchData(semesterRef, { fresh: true })} variant="outline">Retry</Button>
           </Card>
-        ) : courses && (
+        )}
+        {courses && (
           <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4 sm:gap-6">
             {courses.courses.map((course) => (
               <Card key={course.ref.code} className="group border-border hover:border-secondary transition-all shadow-sm py-4 md:py-6">

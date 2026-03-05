@@ -62,7 +62,7 @@ export default function ExamsTab() {
         </Button>
       </div>
 
-      {error ? (
+      {error && exams.length === 0 ? (
         <Card className="border-destructive/20 bg-destructive/5">
           <CardContent className="p-6 text-center text-sm text-destructive font-bold">{error}</CardContent>
         </Card>
@@ -70,12 +70,6 @@ export default function ExamsTab() {
         <RefreshSkeletonOverlay
           loading={loading}
           hasData={exams.length > 0}
-          skeleton={
-            <div className="space-y-3">
-              <Skeleton className="h-24 w-full" />
-              <Skeleton className="h-24 w-full" />
-            </div>
-          }
         >
           <div className="grid gap-3 sm:gap-4">
             {exams.map((exam, i) => (
