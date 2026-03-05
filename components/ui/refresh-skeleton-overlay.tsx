@@ -7,45 +7,37 @@ import { cn } from "@/lib/utils";
 type RefreshSkeletonOverlayProps = {
   loading: boolean;
   hasData: boolean;
-  skeleton: ReactNode;
   children: ReactNode;
   className?: string;
   contentClassName?: string;
-  overlayClassName?: string;
+  staleLabel?: string;
 };
 
 export function RefreshSkeletonOverlay({
   loading,
   hasData,
-  skeleton,
   children,
   className,
   contentClassName,
-  overlayClassName,
+  staleLabel = "Refreshing data",
 }: RefreshSkeletonOverlayProps) {
-  const showOverlay = loading && hasData;
+  const showStaleState = loading && hasData;
 
   return (
-    <div className={cn("relative", className)} aria-busy={showOverlay}>
-      <div
-        className={cn(
-          "transition-opacity duration-200",
-          showOverlay && "opacity-45 pointer-events-none select-none",
-          contentClassName,
-        )}
-      >
+    <div className={cn("relative", className)} aria-busy={showStaleState}>
+      <div className={contentClassName}>
         {children}
       </div>
-      {showOverlay ? (
+      {showStaleState ? (
         <div
-          className={cn(
-            "absolute inset-0 z-10 rounded-[inherit] bg-background/60 p-4 backdrop-blur-[1px]",
-            overlayClassName,
-          )}
+          className="pointer-events-none absolute right-3 top-3 z-10"
           role="status"
           aria-live="polite"
         >
-          {skeleton}
+          <span className="inline-flex items-center gap-2 rounded-full border border-border/80 bg-background/90 px-2.5 py-1 text-[10px] font-black uppercase tracking-widest text-muted-foreground shadow-sm backdrop-blur-sm">
+            <span className="h-1.5 w-1.5 animate-pulse rounded-full bg-amber-500" aria-hidden="true" />
+            {staleLabel}
+          </span>
         </div>
       ) : null}
     </div>

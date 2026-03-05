@@ -131,13 +131,6 @@ export default function ScheduleTab() {
         <RefreshSkeletonOverlay
           loading={loading}
           hasData={hasSchedule}
-          skeleton={
-            <div className="space-y-3">
-              <Skeleton className="h-24 w-full" />
-              <Skeleton className="h-24 w-full" />
-              <Skeleton className="h-24 w-full" />
-            </div>
-          }
         >
           <Schedule schedule={schedule} date={date} attendanceByCourse={attendanceByCourse} />
         </RefreshSkeletonOverlay>
