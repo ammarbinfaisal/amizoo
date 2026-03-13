@@ -74,7 +74,7 @@ export default function ExamsTab() {
           <div className="grid gap-3 sm:gap-4">
             {exams.map((exam, i) => (
               <Card key={i} className="overflow-hidden border-border bg-card shadow-sm">
-                <CardContent className="p-4 sm:p-6 flex flex-row justify-between items-center gap-4">
+                <CardContent className="px-4 sm:px-6 py-0 flex flex-row justify-between items-center gap-4">
                   <div className="min-w-0">
                     <h4 className="font-black text-primary uppercase tracking-tight truncate sm:whitespace-normal">{exam.course.name}</h4>
                     <p className="text-[10px] sm:text-xs text-muted-foreground font-bold uppercase tracking-wider">{exam.course.code}</p>

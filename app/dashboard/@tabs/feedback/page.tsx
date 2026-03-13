@@ -19,6 +19,11 @@ export default function FeedbackTab() {
     const credentials = getLocalCredentials();
     if (!credentials) return;
 
+    if (!comment.trim()) {
+      toast.error("Comment is required");
+      return;
+    }
+
     setLoading(true);
     try {
       const res = await amizoneApi.submitFacultyFeedback(credentials, {
@@ -26,8 +31,12 @@ export default function FeedbackTab() {
         queryRating,
         comment,
       });
-      toast.success("Feedback submitted");
       setFilledFor(res.filledFor);
+      if (res.filledFor > 0) {
+        toast.success(`Feedback submitted for ${res.filledFor} faculty members`);
+      } else {
+        toast.info("No pending feedback — feedback is already submitted or not open yet");
+      }
     } catch (e) {
       toast.error(e instanceof Error ? e.message : "Failed to submit feedback");
     } finally {
@@ -51,12 +60,23 @@ export default function FeedbackTab() {
         </Button>
       </div>
 
-      {filledFor !== null && (
+      {filledFor !== null && filledFor > 0 && (
         <Card className="border-primary/20 bg-primary/5">
           <CardHeader className="p-4 sm:p-6">
             <CardTitle className="text-sm font-black uppercase tracking-widest text-primary">Success</CardTitle>
             <CardDescription className="text-xs">
               Feedback filled for <span className="font-bold tabular-nums">{filledFor}</span> faculty members.
+            </CardDescription>
+          </CardHeader>
+        </Card>
+      )}
+
+      {filledFor !== null && filledFor === 0 && (
+        <Card className="border-muted-foreground/20 bg-muted/50">
+          <CardHeader className="p-4 sm:p-6">
+            <CardTitle className="text-sm font-black uppercase tracking-widest text-muted-foreground">No Pending Feedback</CardTitle>
+            <CardDescription className="text-xs">
+              Feedback is already submitted or not open yet.
             </CardDescription>
           </CardHeader>
         </Card>
@@ -103,7 +123,7 @@ export default function FeedbackTab() {
           <div className="space-y-3">
             <p className="text-[10px] uppercase text-muted-foreground font-bold tracking-wider">Comment</p>
             <Textarea
-              placeholder="Optional comment…"
+              placeholder="Enter a comment…"
               value={comment}
               onChange={(e) => setComment(e.target.value)}
               className="min-h-[100px]"
