@@ -5,7 +5,7 @@ import { Calendar } from "@/components/ui/calendar";
 import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
 import { cn } from "@/lib/utils";
 import { addDays, subDays } from "date-fns";
-import { Calendar as CalendarIcon, ChevronLeft, ChevronRight, RotateCcw } from "lucide-react";
+import { Calendar as CalendarIcon, ChevronLeft, ChevronRight } from "lucide-react";
 import * as React from "react";
 import { formatShortDateLabelIST, isTodayInIST } from "@/lib/date-utils";
 
@@ -17,38 +17,8 @@ interface DateSelectorProps {
 export function DateSelector({ date, onChange }: DateSelectorProps) {
   return (
     <div className="flex items-center gap-2">
-      {!isTodayInIST(date) && (
-        <Button
-          variant="outline"
-          size="icon"
-          className="h-10 w-10 rounded-lg shrink-0 sm:hidden"
-          onClick={() => onChange(new Date())}
-        >
-          <RotateCcw className="h-4 w-4" />
-        </Button>
-      )}
-
-      {!isTodayInIST(date) && (
-        <Button
-          variant="outline"
-          size="sm"
-          className="hidden sm:flex h-10 rounded-lg font-bold uppercase text-[10px] tracking-widest px-4 shrink-0"
-          onClick={() => onChange(new Date())}
-        >
-          <RotateCcw className="mr-2 h-3 w-3" />
-          Back to Today
-        </Button>
-      )}
-
       <div className="flex items-center bg-muted rounded-lg p-1">
-        <Button
-          variant="ghost"
-          size="icon"
-          className="h-8 w-8 rounded-md"
-          onClick={() => onChange(subDays(date, 1))}
-        >
-          <ChevronLeft className="h-4 w-4" />
-        </Button>
+
 
         <Popover>
           <PopoverTrigger asChild>
