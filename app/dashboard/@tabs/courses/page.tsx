@@ -1,14 +1,20 @@
 "use client";
 
-import { useEffect, useState, useCallback } from "react";
+import { useEffect, useState, useCallback, type ReactNode } from "react";
 import { amizoneApi, getLocalCredentials } from "@/lib/api";
 import { Courses, SemesterList } from "@/lib/types";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
-import { Separator } from "@/components/ui/separator";
+import { Badge } from "@/components/ui/badge";
 import { Skeleton } from "@/components/ui/skeleton";
-import { RefreshCw } from "lucide-react";
+import { ExternalLink, FileText, ListChecks, Percent, RefreshCw } from "lucide-react";
 import { RefreshSkeletonOverlay } from "@/components/ui/refresh-skeleton-overlay";
+import {
+  calculateAttendancePercentage,
+  formatAttendanceRatio,
+  formatInternalMarks,
+  getAttendanceBadgeColor,
+} from "@/lib/course-metrics";
 
 export default function CoursesTab() {
   const [courses, setCourses] = useState<Courses | null>(null);
@@ -28,7 +34,7 @@ export default function CoursesTab() {
     try {
       const [coursesData, semestersData] = await Promise.all([
         ref ? amizoneApi.getCoursesBySemester(credentials, ref, init) : amizoneApi.getCourses(credentials, init),
-        amizoneApi.getSemesters(credentials, init).catch(() => null)
+        amizoneApi.getSemesters(credentials, init).catch(() => null),
       ]);
       setCourses(coursesData);
       if (semestersData) setSemesters(semestersData);
@@ -47,11 +53,8 @@ export default function CoursesTab() {
     return (
       <div className="space-y-6">
         <Skeleton className="h-32 w-full" />
-        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-          <Skeleton className="h-48 w-full" />
-          <Skeleton className="h-48 w-full" />
-          <Skeleton className="h-48 w-full" />
-        </div>
+        <Skeleton className="h-24 w-full" />
+        <Skeleton className="h-24 w-full" />
       </div>
     );
   }
@@ -64,8 +67,12 @@ export default function CoursesTab() {
       <div className="space-y-6">
         <Card className="border-border shadow-sm">
           <CardHeader className="pb-4">
-            <CardTitle className="text-sm font-black uppercase tracking-widest">Semester</CardTitle>
-            <CardDescription>Switch semesters to view older courses.</CardDescription>
+            <CardTitle className="text-sm font-black uppercase tracking-widest">
+              Semester
+            </CardTitle>
+            <CardDescription>
+              Switch semesters to view older courses with the same layout and syllabus shortcuts.
+            </CardDescription>
           </CardHeader>
           <CardContent className="flex flex-wrap gap-2">
             <Button
@@ -94,7 +101,7 @@ export default function CoursesTab() {
               variant="outline"
               onClick={() => fetchData(semesterRef, { fresh: true })}
               disabled={loading}
-              className="font-bold uppercase text-[10px] tracking-widest ml-auto"
+              className="ml-auto font-bold uppercase text-[10px] tracking-widest"
             >
               <RefreshCw className={`mr-2 h-3 w-3 ${loading ? "animate-spin" : ""}`} />
               Refresh
@@ -103,46 +110,94 @@ export default function CoursesTab() {
         </Card>
 
         {error && !courses && (
-          <Card className="border-destructive/20 bg-destructive/5 py-4 md:py-6 p-8 md:p-12 text-center">
-              <p className="text-destructive font-bold mb-4">{error}</p>
-              <Button onClick={() => fetchData(semesterRef, { fresh: true })} variant="outline">Retry</Button>
+          <Card className="border-destructive/20 bg-destructive/5 p-8 text-center md:p-12">
+            <p className="mb-4 font-bold text-destructive">{error}</p>
+            <Button
+              onClick={() => fetchData(semesterRef, { fresh: true })}
+              variant="outline"
+            >
+              Retry
+            </Button>
           </Card>
         )}
+
         {courses && (
-          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4 sm:gap-6">
-            {courses.courses.map((course) => (
-              <Card key={course.ref.code} className="group border-border hover:border-secondary transition-all shadow-sm py-4 md:py-6">
-                <CardHeader className="p-4 md:p-6">
-                  <CardTitle className="text-base sm:text-lg font-bold group-hover:text-secondary-foreground transition-colors leading-tight line-clamp-2">
-                    {course.ref.name}
-                  </CardTitle>
-                  <CardDescription className="text-[10px] uppercase font-bold tracking-widest text-muted-foreground">
-                    {course.type}
-                  </CardDescription>
-                </CardHeader>
-                <CardContent className="p-4 md:p-6 pt-0">
-                  <Separator className="mb-3 md:mb-4 bg-border/50" />
-                  <div className="space-y-2 md:space-y-3">
-                    <div className="flex justify-between items-center text-[10px] font-black uppercase tracking-widest">
-                      <span className="opacity-60">Attendance</span>
-                      <span className={getAttendanceColor(course.attendance)}>
-                        {calculatePercentage(course.attendance)}%
-                      </span>
+          <div className="grid gap-3">
+            {courses.courses.map((course) => {
+              const attendancePercentage = calculateAttendancePercentage(course.attendance);
+
+              return (
+                <Card
+                  key={course.ref.code}
+                  className="group overflow-hidden border-border bg-card shadow-sm transition-all hover:bg-secondary/5"
+                  noPadding
+                >
+                  <CardContent className="flex flex-col p-0 sm:flex-row">
+                    <div className="border-b border-border bg-muted px-4 py-3 sm:w-32 sm:border-b-0 sm:border-r sm:px-4 sm:py-4">
+                      <div className="text-sm font-black uppercase tracking-widest text-primary sm:text-center">
+                        {course.ref.code}
+                      </div>
+                      <p className="mt-1 text-[10px] font-semibold uppercase tracking-wide text-muted-foreground sm:text-center">
+                        {course.type}
+                      </p>
                     </div>
-                    <div className="flex justify-between items-center text-[10px] font-black uppercase tracking-widest">
-                      <span className="opacity-60">Internal Marks</span>
-                      <span className="text-primary tabular-nums">
-                        {course.internalMarks.have} / {course.internalMarks.max}
-                      </span>
+
+                    <div className="flex min-w-0 flex-1 flex-col justify-center p-4 sm:p-5">
+                      <div className="flex flex-col gap-3 sm:flex-row sm:items-start sm:justify-between">
+                        <div className="min-w-0">
+                          <h3 className="text-sm font-black uppercase tracking-tight text-primary sm:text-base">
+                            {course.ref.name}
+                          </h3>
+                          <p className="mt-1 text-xs text-muted-foreground">
+                            Direct curriculum link from Amizone&apos;s current course page.
+                          </p>
+                        </div>
+
+                        {course.syllabusDoc ? (
+                          <Button
+                            asChild
+                            variant="outline"
+                            size="sm"
+                            className="font-black uppercase text-[10px] tracking-widest"
+                          >
+                            <a href={course.syllabusDoc} target="_blank" rel="noreferrer">
+                              <ExternalLink className="mr-2 h-3 w-3" />
+                              Syllabus
+                            </a>
+                          </Button>
+                        ) : (
+                          <Badge
+                            variant="outline"
+                            className="text-[10px] font-black uppercase tracking-widest text-muted-foreground"
+                          >
+                            No Syllabus Link
+                          </Badge>
+                        )}
+                      </div>
+
+                      <div className="mt-4 grid gap-2 sm:grid-cols-3">
+                        <MetricTile
+                          icon={<Percent className="h-3 w-3" />}
+                          label="Attendance"
+                          value={attendancePercentage === "NA" ? "NA" : `${attendancePercentage}%`}
+                          accent={getAttendanceBadgeColor(course.attendance)}
+                        />
+                        <MetricTile
+                          icon={<ListChecks className="h-3 w-3" />}
+                          label="Classes"
+                          value={formatAttendanceRatio(course.attendance)}
+                        />
+                        <MetricTile
+                          icon={<FileText className="h-3 w-3" />}
+                          label="Internal Marks"
+                          value={formatInternalMarks(course.internalMarks)}
+                        />
+                      </div>
                     </div>
-                  </div>
-                  <Separator className="my-3 md:my-4 bg-border/50" />
-                  <div className="flex justify-between items-center text-[10px] font-black uppercase tracking-widest opacity-60">
-                    <span>{course.ref.code}</span>
-                  </div>
-                </CardContent>
-              </Card>
-            ))}
+                  </CardContent>
+                </Card>
+              );
+            })}
           </div>
         )}
       </div>
@@ -150,14 +205,26 @@ export default function CoursesTab() {
   );
 }
 
-function calculatePercentage(attendance: { attended: number; held: number }) {
-  if (attendance.held === 0) return "100.00";
-  return ((attendance.attended / attendance.held) * 100).toFixed(2);
-}
-
-function getAttendanceColor(attendance: { attended: number; held: number }) {
-  const percentage = attendance.held === 0 ? 100 : (attendance.attended / attendance.held) * 100;
-  if (percentage >= 75) return "text-primary border-primary";
-  if (percentage >= 60) return "text-secondary-foreground border-secondary";
-  return "text-destructive border-destructive";
+function MetricTile({
+  icon,
+  label,
+  value,
+  accent,
+}: {
+  icon: ReactNode;
+  label: string;
+  value: string;
+  accent?: string;
+}) {
+  return (
+    <div className="rounded-lg border border-border/70 bg-muted/40 px-3 py-3">
+      <div className="flex items-center gap-1.5 text-[10px] font-bold uppercase tracking-widest text-muted-foreground">
+        {icon}
+        <span>{label}</span>
+      </div>
+      <div className={`mt-2 text-sm font-black tabular-nums ${accent ?? "text-foreground"}`}>
+        {value}
+      </div>
+    </div>
+  );
 }

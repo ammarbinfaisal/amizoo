@@ -3,6 +3,12 @@ import { cn } from "@/lib/utils";
 import { Card, CardContent } from "@/components/ui/card";
 import { AlertTriangle, Clock, ListChecks, MapPin, Percent, User } from "lucide-react";
 import { formatAmizoneTime, formatClassRange, formatISODateInIST, formatLongDateLabelIST, getMinutesInIST } from "@/lib/date-utils";
+import {
+  calculateAttendancePercentage,
+  formatAttendanceRatio,
+  getAttendanceTextColor,
+  isCriticalAttendance,
+} from "@/lib/course-metrics";
 
 export function Schedule({
   schedule,
@@ -32,6 +38,7 @@ export function Schedule({
         const isCancelled = status === "CANCELLED";
         const courseName = cls.course.name.includes(" - ") ? cls.course.name.split(" - ")[1] : cls.course.name;
         const attendance = attendanceByCourse?.[cls.course.code];
+        const attendancePercentage = attendance ? calculateAttendancePercentage(attendance) : "NA";
 
         return (
           <Card
@@ -42,10 +49,10 @@ export function Schedule({
             )}
             noPadding
           >
-            <CardContent className="p-0 flex flex-row h-24 sm:h-auto">
+            <CardContent className="flex h-24 flex-row p-0 sm:h-auto">
               <div
                 className={cn(
-                  "bg-muted w-20 sm:w-28 p-2 sm:p-6 flex flex-col items-center justify-center border-r border-border shrink-0",
+                  "flex w-20 shrink-0 flex-col items-center justify-center border-r border-border bg-muted p-2 sm:w-24 sm:p-4",
                   isCancelled && "bg-destructive/5 border-destructive/30"
                 )}
               >
@@ -57,12 +64,12 @@ export function Schedule({
                 >
                   {formatAmizoneTime(cls.startTime)}
                 </span>
-                <span className="text-[8px] sm:text-[10px] text-muted-foreground uppercase font-bold tracking-tighter text-center">
+                <span className="text-center text-[8px] font-bold uppercase tracking-tighter text-muted-foreground sm:text-[10px]">
                   {formatClassRange(cls.startTime, cls.endTime)}
                 </span>
               </div>
-              <div className="flex-grow p-3 sm:p-6 flex flex-col justify-center min-w-0">
-                <div className="flex flex-col gap-1 sm:flex-row sm:items-start sm:justify-between sm:gap-4 mb-1 sm:mb-3">
+              <div className="flex min-w-0 flex-grow flex-col justify-center p-3 sm:p-4">
+                <div className="mb-1 flex flex-col gap-1 sm:mb-2 sm:flex-row sm:items-start sm:justify-between sm:gap-4">
                   <div className="min-w-0 space-y-1">
                     <h4
                       className={cn(
@@ -77,33 +84,37 @@ export function Schedule({
                     {status && <StatusBadge status={status} />}
                   </div>
                 </div>
-                <div className="flex flex-col sm:flex-row sm:flex-wrap gap-x-6 gap-y-1 text-[10px] sm:text-xs font-medium text-muted-foreground">
-                  <div className="flex items-center gap-1.5 truncate">
-                    <User className="h-3 w-3 sm:h-3.5 sm:w-3.5 shrink-0" />
-                    <span className="truncate">{cls.faculty}</span>
+                <div className="flex flex-col gap-1 text-[10px] font-medium text-muted-foreground sm:grid sm:grid-cols-[minmax(0,1fr)_auto] sm:items-center sm:gap-3 sm:text-xs">
+                  <div className="flex min-w-0 flex-wrap items-center gap-x-4 gap-y-1">
+                    <div className="flex min-w-0 items-center gap-1.5 truncate">
+                      <User className="h-3 w-3 shrink-0 sm:h-3.5 sm:w-3.5" />
+                      <span className="truncate">{cls.faculty}</span>
+                    </div>
+                    <div className="flex items-center gap-1.5 shrink-0">
+                      <MapPin className="h-3 w-3 shrink-0 sm:h-3.5 sm:w-3.5" />
+                      <span>{cls.room}</span>
+                    </div>
                   </div>
-                  <div className="flex items-center gap-1.5 shrink-0">
-                    <MapPin className="h-3 w-3 sm:h-3.5 sm:w-3.5 shrink-0" />
-                    <span>{cls.room}</span>
+                  <div className="flex flex-wrap items-center gap-x-3 gap-y-1 sm:justify-end">
                     {attendance ? (
                       <>
                         <span
                           className={cn(
-                            "ml-1 text-[10px] sm:text-[11px] font-semibold tabular-nums flex items-center gap-1",
-                            getAttendanceColor(attendance)
+                            "flex items-center gap-1 text-[10px] font-semibold tabular-nums sm:text-[11px]",
+                            getAttendanceTextColor(attendance)
                           )}
                         >
                           {isCriticalAttendance(attendance) && <AlertTriangle className="h-3 w-3" />}
                           <Percent className="h-3 w-3 opacity-70" />
-                          {calculatePercentage(attendance)}%
+                          {attendancePercentage === "NA" ? "NA" : `${attendancePercentage}%`}
                         </span>
-                        <span className="text-[10px] sm:text-[11px] font-semibold tabular-nums text-muted-foreground flex items-center gap-1">
+                        <span className="flex items-center gap-1 text-[10px] font-semibold tabular-nums text-muted-foreground sm:text-[11px]">
                           <ListChecks className="h-3 w-3 opacity-70" />
-                          {attendance.attended}/{attendance.held}
+                          {formatAttendanceRatio(attendance)}
                         </span>
                       </>
                     ) : (
-                      <span className="text-[9px] sm:text-[10px] font-normal tabular-nums text-muted-foreground/70">NA</span>
+                      <span className="text-[9px] font-normal tabular-nums text-muted-foreground/70 sm:text-[10px]">NA</span>
                     )}
                   </div>
                 </div>
@@ -170,22 +181,4 @@ function StatusBadge({ status }: { status: string }) {
       {status}
     </span>
   );
-}
-
-function calculatePercentage(attendance: Attendance) {
-  if (attendance.held === 0) return "100.00";
-  return ((attendance.attended / attendance.held) * 100).toFixed(2);
-}
-
-function getAttendanceColor(attendance: Attendance) {
-  const percentage = attendance.held === 0 ? 100 : (attendance.attended / attendance.held) * 100;
-  if (percentage > 90) return "text-emerald-700";
-  if (percentage >= 75) return "text-amber-600";
-  if (percentage < 70) return "text-rose-800";
-  return "text-red-700";
-}
-
-function isCriticalAttendance(attendance: Attendance) {
-  const percentage = attendance.held === 0 ? 100 : (attendance.attended / attendance.held) * 100;
-  return percentage < 70;
 }
