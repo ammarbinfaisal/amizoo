@@ -116,12 +116,12 @@ export default function ScheduleTab() {
   return (
     <div className="space-y-6">
       {/* HEADER */}
-      <div className="flex items-center justify-between">
+      <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
         <h2 className="text-2xl font-black uppercase tracking-tight">
           Class Schedule
         </h2>
 
-        <div className="flex items-center gap-3">
+        <div className="flex flex-wrap items-center justify-end gap-2 sm:gap-3">
           {/* Back to Today */}
           {!isTodayInIST(date) && (
             <Button

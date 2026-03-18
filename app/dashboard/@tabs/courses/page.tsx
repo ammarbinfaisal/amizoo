@@ -148,9 +148,7 @@ export default function CoursesTab() {
                           <h3 className="text-sm font-black uppercase tracking-tight text-primary sm:text-base">
                             {course.ref.name}
                           </h3>
-                          <p className="mt-1 text-xs text-muted-foreground">
-                            Direct curriculum link from Amizone&apos;s current course page.
-                          </p>
+
                         </div>
 
                         {course.syllabusDoc ? (

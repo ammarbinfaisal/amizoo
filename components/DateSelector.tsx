@@ -18,7 +18,14 @@ export function DateSelector({ date, onChange }: DateSelectorProps) {
   return (
     <div className="flex items-center gap-2">
       <div className="flex items-center bg-muted rounded-lg p-1">
-
+        <Button
+          variant="ghost"
+          size="icon"
+          className="h-8 w-8 rounded-md"
+          onClick={() => onChange(subDays(date, 1))}
+        >
+          <ChevronLeft className="h-4 w-4" />
+        </Button>
 
         <Popover>
           <PopoverTrigger asChild>
