@@ -2,6 +2,7 @@
 
 import { useEffect, useState, useCallback, useMemo } from "react";
 import { amizoneApi, getLocalCredentials } from "@/lib/api";
+import { useDashboard } from "@/lib/dashboard-context";
 import { AttendanceRecords, ScheduledClasses } from "@/lib/types";
 import { Schedule } from "@/components/Schedule";
 import { DateSelector } from "@/components/DateSelector";
@@ -34,13 +35,30 @@ function shouldForceFreshSchedule(selectedDate: Date, now: Date): boolean {
 }
 
 export default function ScheduleTab() {
+  const {
+    schedule: dashboardSchedule,
+    attendance: dashboardAttendance,
+  } = useDashboard();
   const [date, setDate] = useState<Date>(new Date());
   const [schedule, setSchedule] =
-    useState<ScheduledClasses | null>(null);
+    useState<ScheduledClasses | null>(dashboardSchedule);
   const [attendance, setAttendance] =
-    useState<AttendanceRecords | null>(null);
+    useState<AttendanceRecords | null>(dashboardAttendance);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
+  const isToday = isTodayInIST(date);
+
+  useEffect(() => {
+    if (isToday && dashboardSchedule) {
+      setSchedule((current) => current ?? dashboardSchedule);
+    }
+  }, [dashboardSchedule, isToday]);
+
+  useEffect(() => {
+    if (dashboardAttendance) {
+      setAttendance((current) => current ?? dashboardAttendance);
+    }
+  }, [dashboardAttendance]);
 
   const fetchSchedule = useCallback(
     async (d: Date, opts?: { fresh?: boolean }) => {
@@ -60,8 +78,8 @@ export default function ScheduleTab() {
           });
 
         const attendancePromise =
-          attendance && !opts?.fresh
-            ? Promise.resolve(attendance)
+          (attendance ?? dashboardAttendance) && !opts?.fresh
+            ? Promise.resolve(attendance ?? dashboardAttendance)
             : amizoneApi.getAttendance(
                 credentials,
                 fresh ? { cache: "no-store" } : undefined
@@ -92,26 +110,29 @@ export default function ScheduleTab() {
         setLoading(false);
       }
     },
-    [attendance]
+    [attendance, dashboardAttendance]
   );
 
   useEffect(() => {
     fetchSchedule(date);
   }, [date, fetchSchedule]);
 
-  const attendanceByCourse = useMemo(() => {
-    if (!attendance) return null;
+  const visibleSchedule = isToday ? schedule ?? dashboardSchedule : schedule;
+  const visibleAttendance = attendance ?? dashboardAttendance;
 
-    return attendance.records.reduce<
+  const attendanceByCourse = useMemo(() => {
+    if (!visibleAttendance) return null;
+
+    return visibleAttendance.records.reduce<
       Record<string, { attended: number; held: number }>
     >((acc, record) => {
       acc[record.course.code] = record.attendance;
       return acc;
     }, {});
-  }, [attendance]);
-  const isInitialLoading = loading && !schedule;
-  const hasSchedule = Boolean(schedule);
-  const showBlockingError = Boolean(error && !schedule);
+  }, [visibleAttendance]);
+  const isInitialLoading = loading && !visibleSchedule;
+  const hasSchedule = Boolean(visibleSchedule);
+  const showBlockingError = Boolean(error && !visibleSchedule);
 
   return (
     <div className="space-y-6">
@@ -190,12 +211,12 @@ export default function ScheduleTab() {
             </Button>
           </CardContent>
         </Card>
-      ) : schedule ? (
+      ) : visibleSchedule ? (
         <RefreshSkeletonOverlay
           loading={loading}
           hasData={hasSchedule}
         >
-          <Schedule schedule={schedule} date={date} attendanceByCourse={attendanceByCourse} />
+          <Schedule schedule={visibleSchedule} date={date} attendanceByCourse={attendanceByCourse} />
         </RefreshSkeletonOverlay>
       ) : null}
     </div>

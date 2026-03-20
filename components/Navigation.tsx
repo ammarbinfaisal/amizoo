@@ -44,7 +44,7 @@ export function DesktopNav() {
                 : "hover:bg-muted text-muted-foreground hover:text-foreground"
             )}
           >
-            <item.icon className={cn("h-4 w-4", isActive ? "animate-pulse" : "")} />
+            <item.icon className="h-4 w-4" />
             {item.label}
           </Link>
         );
@@ -61,11 +61,10 @@ import {
   DrawerTrigger,
   DrawerClose,
 } from "@/components/ui/drawer";
-import { Menu, X } from "lucide-react";
+import { Menu } from "lucide-react";
 
 export function MobileNav() {
   const pathname = usePathname();
-  const activeItem = navItems.find(item => pathname.startsWith(item.href)) || navItems[0];
 
   return (
     <div className="lg:hidden fixed bottom-6 right-6 z-50">
@@ -98,7 +97,7 @@ export function MobileNav() {
                         : "bg-muted/50 text-muted-foreground border-transparent active:scale-95"
                     )}
                   >
-                    <item.icon className={cn("h-6 w-6", isActive ? "animate-pulse" : "")} />
+                    <item.icon className="h-6 w-6" />
                     <span className="text-[10px] font-black uppercase tracking-widest text-center">
                       {item.label}
                     </span>
