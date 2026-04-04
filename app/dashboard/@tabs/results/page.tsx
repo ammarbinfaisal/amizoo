@@ -1,7 +1,7 @@
 "use client";
 
 import { useEffect, useState, useCallback } from "react";
-import { amizoneApi, getLocalCredentials } from "@/lib/api";
+import { amizoneApi, amizoneCache, getLocalCredentials } from "@/lib/api";
 import { ExamResultRecords, SemesterList } from "@/lib/types";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
@@ -10,6 +10,7 @@ import { Button } from "@/components/ui/button";
 import { Skeleton } from "@/components/ui/skeleton";
 import { Award, RefreshCw } from "lucide-react";
 import { RefreshSkeletonOverlay } from "@/components/ui/refresh-skeleton-overlay";
+import { useIsomorphicLayoutEffect } from "@/lib/use-isomorphic-layout-effect";
 
 export default function ResultsTab() {
   const [data, setData] = useState<ExamResultRecords | null>(null);
@@ -17,6 +18,27 @@ export default function ResultsTab() {
   const [loading, setLoading] = useState(true);
   const [semesterRef, setSemesterRef] = useState<string | null>(null);
   const [error, setError] = useState<string | null>(null);
+
+  useIsomorphicLayoutEffect(() => {
+    const credentials = getLocalCredentials();
+    if (!credentials) return;
+
+    const cachedResults = semesterRef
+      ? amizoneCache.getExamResult(semesterRef, credentials)
+      : amizoneCache.getCurrentExamResult(credentials);
+    const cachedSemesters = amizoneCache.getSemesters(credentials);
+
+    if (!cachedResults && !cachedSemesters) return;
+
+    if (cachedResults) {
+      setData(cachedResults);
+      setLoading(false);
+    }
+
+    if (cachedSemesters) {
+      setSemesters((current) => current ?? cachedSemesters);
+    }
+  }, [semesterRef]);
 
   const fetchData = useCallback(async (ref: string | null, opts?: { fresh?: boolean }) => {
     const credentials = getLocalCredentials();

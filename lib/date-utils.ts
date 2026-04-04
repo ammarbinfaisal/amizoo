@@ -21,6 +21,28 @@ export function formatAmizoneTime(timestamp: string): string {
 }
 
 /**
+ * Formats a calendar date from an Amizone timestamp/date string without
+ * applying browser timezone conversion.
+ */
+export function formatAmizoneDate(timestamp: string): string {
+  if (!timestamp) return "";
+
+  const rawDate = timestamp.includes("T") ? timestamp.split("T")[0] : timestamp;
+  const [year, month, day] = rawDate.split("-").map(Number);
+
+  if (!Number.isFinite(year) || !Number.isFinite(month) || !Number.isFinite(day)) {
+    return rawDate;
+  }
+
+  return new Intl.DateTimeFormat("en-IN", {
+    year: "numeric",
+    month: "short",
+    day: "2-digit",
+    timeZone: "UTC",
+  }).format(new Date(Date.UTC(year, month - 1, day)));
+}
+
+/**
  * Formats a time range string (HH:mm - HH:mm) from class timestamps.
  */
 export function formatClassRange(startTime: string, endTime: string): string {

@@ -72,13 +72,13 @@ function DashboardHeader() {
         </div>
         
         <div className="flex items-center gap-4">
-          {loading ? (
-            <Skeleton className="h-8 w-32 hidden md:block" />
-          ) : profile ? (
+          {profile ? (
             <div className="hidden md:flex flex-col items-end mr-2">
               <span className="text-sm font-bold">{profile.name}</span>
               <span className="text-[10px] text-muted-foreground uppercase tracking-wider">{profile.enrollmentNumber}</span>
             </div>
+          ) : loading ? (
+            <Skeleton className="h-8 w-32 hidden md:block" />
           ) : null}
           {!isOnline ? (
             <div

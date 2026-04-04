@@ -1,10 +1,11 @@
 "use client";
 
 import React, { createContext, useContext, useState, useEffect, useCallback } from "react";
-import { amizoneApi, getLocalCredentials } from "@/lib/api";
+import { amizoneApi, amizoneCache, getLocalCredentials } from "@/lib/api";
 import { Profile, AttendanceRecords, ScheduledClasses, WifiMacInfo } from "@/lib/types";
 import { useRouter } from "next/navigation";
 import { formatISODateInIST } from "@/lib/date-utils";
+import { useIsomorphicLayoutEffect } from "@/lib/use-isomorphic-layout-effect";
 
 interface DashboardContextType {
   profile: Profile | null;
@@ -26,6 +27,39 @@ export function DashboardProvider({ children }: { children: React.ReactNode }) {
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
   const router = useRouter();
+
+  useIsomorphicLayoutEffect(() => {
+    const credentials = getLocalCredentials();
+    if (!credentials) return;
+
+    const today = formatISODateInIST(new Date());
+    const cachedProfile = amizoneCache.getProfile(credentials);
+    const cachedAttendance = amizoneCache.getAttendance(credentials);
+    const cachedSchedule = amizoneCache.getClassSchedule(today, credentials);
+    const cachedWifiMac =
+      amizoneCache.getWifiMacInfo(credentials) ??
+      (() => {
+        const legacy = amizoneCache.getWifiInfo(credentials);
+        if (!legacy?.macAddress) return null;
+        return {
+          addresses: [legacy.macAddress],
+          slots: 0,
+          freeSlots: 0,
+        } satisfies WifiMacInfo;
+      })();
+
+    const hasCachedData = Boolean(
+      cachedProfile || cachedAttendance || cachedSchedule || cachedWifiMac
+    );
+
+    if (!hasCachedData) return;
+
+    setProfile((current) => current ?? cachedProfile);
+    setAttendance((current) => current ?? cachedAttendance);
+    setSchedule((current) => current ?? cachedSchedule);
+    setWifiMac((current) => current ?? cachedWifiMac);
+    setLoading(false);
+  }, []);
 
   const fetchData = useCallback(async ({ fresh }: { fresh?: boolean } = {}) => {
     const credentials = getLocalCredentials();

@@ -40,6 +40,15 @@ function getCacheKey(creds: Credentials, endpoint: string, method: string) {
   return `${CACHE_PREFIX}:${creds.username}:${method}:${normalized}`;
 }
 
+function getClassScheduleEndpoint(date: string, options?: ScheduleFetchOptions) {
+  const [year, month, day] = date.split("-");
+  let endpoint = `/api/v1/class_schedule/${year}/${month}/${day}`;
+  if (options?.fresh) {
+    endpoint = `${endpoint}?refresh=${encodeURIComponent(String(Date.now()))}`;
+  }
+  return endpoint;
+}
+
 function readCache<T>(key: string): { data: T; timestamp: number } | null {
   if (!isBrowser) return null;
   let raw: string | null = null;
@@ -165,6 +174,18 @@ export async function fetchFromAmizone<T>(
   return parsed;
 }
 
+export function getCachedAmizoneData<T>(
+  endpoint: string,
+  credentials?: Credentials,
+  method = "GET"
+): T | null {
+  const creds = credentials || getLocalCredentials();
+  if (!creds) return null;
+
+  const cacheKey = getCacheKey(creds, endpoint, method.toUpperCase());
+  return readCache<T>(cacheKey)?.data ?? null;
+}
+
 export const amizoneApi = {
   getAttendance: (creds?: Credentials, init?: AmizoneRequestInit) =>
     fetchFromAmizone<AttendanceRecords>("/api/v1/attendance", creds, undefined, init),
@@ -177,11 +198,7 @@ export const amizoneApi = {
   getCoursesBySemester: (creds: Credentials | undefined, semesterRef: string, init?: AmizoneRequestInit) =>
     fetchFromAmizone<Courses>(`/api/v1/courses/${encodeURIComponent(semesterRef)}`, creds, undefined, init),
   getClassSchedule: (creds: Credentials | undefined, date: string, options?: ScheduleFetchOptions) => {
-    const [year, month, day] = date.split("-");
-    let endpoint = `/api/v1/class_schedule/${year}/${month}/${day}`;
-    if (options?.fresh) {
-      endpoint = `${endpoint}?refresh=${encodeURIComponent(String(Date.now()))}`;
-    }
+    const endpoint = getClassScheduleEndpoint(date, options);
     return fetchFromAmizone<ScheduledClasses>(endpoint, creds, undefined, options?.fresh ? { cache: "no-store" } : undefined);
   },
   // Legacy shape compatibility (some deployments return { macAddress }).
@@ -219,4 +236,29 @@ export const amizoneApi = {
         body: JSON.stringify(payload),
       }
     ),
+};
+
+export const amizoneCache = {
+  getAttendance: (creds?: Credentials) =>
+    getCachedAmizoneData<AttendanceRecords>("/api/v1/attendance", creds),
+  getProfile: (creds?: Credentials) =>
+    getCachedAmizoneData<Profile>("/api/v1/user_profile", creds),
+  getSemesters: (creds?: Credentials) =>
+    getCachedAmizoneData<SemesterList>("/api/v1/semesters", creds),
+  getCourses: (creds?: Credentials) =>
+    getCachedAmizoneData<Courses>("/api/v1/courses", creds),
+  getCoursesBySemester: (semesterRef: string, creds?: Credentials) =>
+    getCachedAmizoneData<Courses>(`/api/v1/courses/${encodeURIComponent(semesterRef)}`, creds),
+  getClassSchedule: (date: string, creds?: Credentials) =>
+    getCachedAmizoneData<ScheduledClasses>(getClassScheduleEndpoint(date), creds),
+  getWifiInfo: (creds?: Credentials) =>
+    getCachedAmizoneData<WifiInfo>("/api/v1/wifi_mac_address", creds),
+  getWifiMacInfo: (creds?: Credentials) =>
+    getCachedAmizoneData<WifiMacInfo>("/api/v1/wifi_mac", creds),
+  getExamSchedule: (creds?: Credentials) =>
+    getCachedAmizoneData<ExaminationSchedule>("/api/v1/exam_schedule", creds),
+  getExamResult: (semesterRef: string, creds?: Credentials) =>
+    getCachedAmizoneData<ExamResultRecords>(`/api/v1/exam_result/${encodeURIComponent(semesterRef)}`, creds),
+  getCurrentExamResult: (creds?: Credentials) =>
+    getCachedAmizoneData<ExamResultRecords>("/api/v1/exam_result", creds),
 };

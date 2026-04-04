@@ -1,7 +1,7 @@
 "use client";
 
 import { useEffect, useState, useCallback, type ReactNode } from "react";
-import { amizoneApi, getLocalCredentials } from "@/lib/api";
+import { amizoneApi, amizoneCache, getLocalCredentials } from "@/lib/api";
 import { Courses, SemesterList } from "@/lib/types";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
@@ -15,6 +15,7 @@ import {
   formatInternalMarks,
   getAttendanceBadgeColor,
 } from "@/lib/course-metrics";
+import { useIsomorphicLayoutEffect } from "@/lib/use-isomorphic-layout-effect";
 
 export default function CoursesTab() {
   const [courses, setCourses] = useState<Courses | null>(null);
@@ -22,6 +23,27 @@ export default function CoursesTab() {
   const [loading, setLoading] = useState(true);
   const [semesterRef, setSemesterRef] = useState<string | null>(null);
   const [error, setError] = useState<string | null>(null);
+
+  useIsomorphicLayoutEffect(() => {
+    const credentials = getLocalCredentials();
+    if (!credentials) return;
+
+    const cachedCourses = semesterRef
+      ? amizoneCache.getCoursesBySemester(semesterRef, credentials)
+      : amizoneCache.getCourses(credentials);
+    const cachedSemesters = amizoneCache.getSemesters(credentials);
+
+    if (!cachedCourses && !cachedSemesters) return;
+
+    if (cachedCourses) {
+      setCourses(cachedCourses);
+      setLoading(false);
+    }
+
+    if (cachedSemesters) {
+      setSemesters((current) => current ?? cachedSemesters);
+    }
+  }, [semesterRef]);
 
   const fetchData = useCallback(async (ref: string | null, opts?: { fresh?: boolean }) => {
     const credentials = getLocalCredentials();

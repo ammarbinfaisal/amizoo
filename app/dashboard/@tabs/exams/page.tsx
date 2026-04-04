@@ -1,13 +1,15 @@
 "use client";
 
 import { useEffect, useState, useCallback } from "react";
-import { amizoneApi, getLocalCredentials } from "@/lib/api";
+import { amizoneApi, amizoneCache, getLocalCredentials } from "@/lib/api";
 import { CourseRef } from "@/lib/types";
 import { Card, CardContent } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { FileText, RefreshCw } from "lucide-react";
 import { Skeleton } from "@/components/ui/skeleton";
 import { RefreshSkeletonOverlay } from "@/components/ui/refresh-skeleton-overlay";
+import { useIsomorphicLayoutEffect } from "@/lib/use-isomorphic-layout-effect";
+import { formatAmizoneDate, formatAmizoneTime } from "@/lib/date-utils";
 
 type NormalizedExamItem = {
   course: CourseRef;
@@ -21,6 +23,17 @@ export default function ExamsTab() {
   const [exams, setExams] = useState<NormalizedExamItem[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
+
+  useIsomorphicLayoutEffect(() => {
+    const credentials = getLocalCredentials();
+    if (!credentials) return;
+
+    const cachedSchedule = amizoneCache.getExamSchedule(credentials);
+    if (!cachedSchedule) return;
+
+    setExams((current) => (current.length > 0 ? current : normalizeExamItems(cachedSchedule)));
+    setLoading(false);
+  }, []);
 
   const fetchData = useCallback(async (opts?: { fresh?: boolean }) => {
     const credentials = getLocalCredentials();
@@ -121,13 +134,12 @@ function normalizeExamItems(raw: unknown): NormalizedExamItem[] {
 
     const timeValue = exam.time;
     if (typeof timeValue === "string" && timeValue.includes("T")) {
-      const dt = new Date(timeValue);
       items.push({
         course,
         mode,
         location,
-        dateLabel: dt.toLocaleDateString("en-IN", { year: "numeric", month: "short", day: "2-digit" }),
-        timeLabel: dt.toLocaleTimeString("en-IN", { hour: "2-digit", minute: "2-digit", hour12: true }),
+        dateLabel: formatAmizoneDate(timeValue),
+        timeLabel: formatAmizoneTime(timeValue),
       });
       continue;
     }
