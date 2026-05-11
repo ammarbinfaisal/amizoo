@@ -18,7 +18,7 @@ const withPWA = withPWAInit({
     runtimeCaching: [
       {
         // Schedule data changes day-to-day; prefer network and only fall back to cache.
-        urlPattern: /^https:\/\/api\.ami\.zoo\.fullstacktics\.com\/api\/v1\/class_schedule\/.*/i,
+        urlPattern: /^https:\/\/amizone\.fullstacktics\.com\/api\/v1\/class_schedule\/.*/i,
         handler: "NetworkFirst",
         options: {
           cacheName: SCHEDULE_CACHE_NAME,
@@ -33,7 +33,7 @@ const withPWA = withPWAInit({
         },
       },
       {
-        urlPattern: /^https:\/\/api\.ami\.zoo\.fullstacktics\.com\/api\/.*/i,
+        urlPattern: /^https:\/\/amizone\.fullstacktics\.com\/api\/.*/i,
         handler: "StaleWhileRevalidate",
         options: {
           cacheName: API_CACHE_NAME,
