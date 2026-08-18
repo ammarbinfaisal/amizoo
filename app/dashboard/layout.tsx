@@ -9,6 +9,7 @@ import { Skeleton } from "@/components/ui/skeleton";
 import { PWAInstallPrompt } from "@/components/PWAInstallPrompt";
 import React from "react";
 import { useOnlineStatus } from "@/lib/use-online-status";
+import { logout } from "@/lib/api";
 
 export default function DashboardLayout({
   tabs,
@@ -55,10 +56,12 @@ function DashboardHeader() {
   const router = useRouter();
   const isOnline = useOnlineStatus();
 
-  const handleLogout = () => {
-    localStorage.removeItem("amizone_user");
-    localStorage.removeItem("amizone_pass");
-    router.push("/api/auth/logout");
+  const handleLogout = async () => {
+    // Clears the httpOnly credential cookie server-side and drops the
+    // offline mirror, so nothing is left behind on a shared device.
+    await logout().catch(() => undefined);
+    router.push("/login");
+    router.refresh();
   };
 
   return (

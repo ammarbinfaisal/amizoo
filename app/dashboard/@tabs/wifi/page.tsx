@@ -2,7 +2,7 @@
 
 import { useDashboard } from "@/lib/dashboard-context";
 import { useState } from "react";
-import { amizoneApi, getLocalCredentials } from "@/lib/api";
+import { amizoneApi, getSessionUser } from "@/lib/api";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
 import { Button } from "@/components/ui/button";
@@ -19,8 +19,7 @@ export default function WifiTab() {
   const [actionLoading, setActionLoading] = useState(false);
 
   const handleAdd = async () => {
-    const credentials = getLocalCredentials();
-    if (!credentials) return;
+    if (!getSessionUser()) return;
 
     const cleaned = normalizeMacAddress(address);
     if (!cleaned) {
@@ -30,7 +29,7 @@ export default function WifiTab() {
 
     setActionLoading(true);
     try {
-      await amizoneApi.registerWifiMac(credentials, cleaned, overrideLimit);
+      await amizoneApi.registerWifiMac(cleaned, overrideLimit);
       toast.success("Wi-Fi MAC added");
       setAddress("");
       await refresh();
@@ -42,12 +41,11 @@ export default function WifiTab() {
   };
 
   const handleRemove = async (addr: string) => {
-    const credentials = getLocalCredentials();
-    if (!credentials) return;
+    if (!getSessionUser()) return;
 
     setActionLoading(true);
     try {
-      await amizoneApi.deregisterWifiMac(credentials, addr);
+      await amizoneApi.deregisterWifiMac(addr);
       toast.success("Wi-Fi MAC removed");
       await refresh();
     } catch (e) {

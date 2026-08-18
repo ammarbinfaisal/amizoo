@@ -1,7 +1,7 @@
 "use client";
 
 import { useState } from "react";
-import { amizoneApi, getLocalCredentials } from "@/lib/api";
+import { amizoneApi, getSessionUser } from "@/lib/api";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Textarea } from "@/components/ui/textarea";
@@ -16,8 +16,7 @@ export default function FeedbackTab() {
   const [filledFor, setFilledFor] = useState<number | null>(null);
 
   const handleSubmit = async () => {
-    const credentials = getLocalCredentials();
-    if (!credentials) return;
+    if (!getSessionUser()) return;
 
     if (!comment.trim()) {
       toast.error("Comment is required");
@@ -26,7 +25,7 @@ export default function FeedbackTab() {
 
     setLoading(true);
     try {
-      const res = await amizoneApi.submitFacultyFeedback(credentials, {
+      const res = await amizoneApi.submitFacultyFeedback({
         rating,
         queryRating,
         comment,

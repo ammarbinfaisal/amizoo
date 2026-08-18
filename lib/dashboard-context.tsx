@@ -1,7 +1,7 @@
 "use client";
 
 import React, { createContext, useContext, useState, useEffect, useCallback } from "react";
-import { amizoneApi, amizoneCache, getLocalCredentials } from "@/lib/api";
+import { amizoneApi, amizoneCache, getSessionUser, isUnauthorizedError } from "@/lib/api";
 import { Profile, AttendanceRecords, ScheduledClasses, WifiMacInfo } from "@/lib/types";
 import { useRouter } from "next/navigation";
 import { formatISODateInIST } from "@/lib/date-utils";
@@ -29,17 +29,16 @@ export function DashboardProvider({ children }: { children: React.ReactNode }) {
   const router = useRouter();
 
   useIsomorphicLayoutEffect(() => {
-    const credentials = getLocalCredentials();
-    if (!credentials) return;
+    if (!getSessionUser()) return;
 
     const today = formatISODateInIST(new Date());
-    const cachedProfile = amizoneCache.getProfile(credentials);
-    const cachedAttendance = amizoneCache.getAttendance(credentials);
-    const cachedSchedule = amizoneCache.getClassSchedule(today, credentials);
+    const cachedProfile = amizoneCache.getProfile();
+    const cachedAttendance = amizoneCache.getAttendance();
+    const cachedSchedule = amizoneCache.getClassSchedule(today);
     const cachedWifiMac =
-      amizoneCache.getWifiMacInfo(credentials) ??
+      amizoneCache.getWifiMacInfo() ??
       (() => {
-        const legacy = amizoneCache.getWifiInfo(credentials);
+        const legacy = amizoneCache.getWifiInfo();
         if (!legacy?.macAddress) return null;
         return {
           addresses: [legacy.macAddress],
@@ -62,8 +61,7 @@ export function DashboardProvider({ children }: { children: React.ReactNode }) {
   }, []);
 
   const fetchData = useCallback(async ({ fresh }: { fresh?: boolean } = {}) => {
-    const credentials = getLocalCredentials();
-    if (!credentials) {
+    if (!getSessionUser()) {
       router.push("/login");
       return;
     }
@@ -72,19 +70,36 @@ export function DashboardProvider({ children }: { children: React.ReactNode }) {
     setError(null);
 
     const today = formatISODateInIST(new Date());
-    const init = fresh ? ({ cache: "no-store" } as const) : undefined;
+    const opts = fresh ? { fresh: true } : undefined;
+
+    // The session can be rejected upstream mid-flight; capture that so we bounce
+    // to /login instead of rendering an empty dashboard.
+    let unauthorized = false;
+    const guard = (error: unknown) => {
+      if (isUnauthorizedError(error)) unauthorized = true;
+      return null;
+    };
 
     try {
       const [p, a, s, w] = await Promise.all([
-        amizoneApi.getProfile(credentials, init).catch(() => null),
-        amizoneApi.getAttendance(credentials, init).catch(() => null),
-        amizoneApi.getClassSchedule(credentials, today, fresh ? { fresh: true } : undefined).catch(() => null),
-        amizoneApi.getWifiMacInfo(credentials, init).catch(async () => {
-            const legacy = await amizoneApi.getWifiInfo(credentials, init).catch(() => null);
-            if (legacy?.macAddress) return { addresses: [legacy.macAddress], slots: 0, freeSlots: 0 };
+        amizoneApi.getProfile(opts).catch(guard),
+        amizoneApi.getAttendance(opts).catch(guard),
+        amizoneApi.getClassSchedule(today, opts).catch(guard),
+        amizoneApi.getWifiMacInfo(opts).catch(async (error) => {
+          if (isUnauthorizedError(error)) {
+            unauthorized = true;
             return null;
+          }
+          const legacy = await amizoneApi.getWifiInfo(opts).catch(guard);
+          if (legacy?.macAddress) return { addresses: [legacy.macAddress], slots: 0, freeSlots: 0 };
+          return null;
         }),
       ]);
+
+      if (unauthorized) {
+        router.push("/login");
+        return;
+      }
 
       if (p) setProfile(p);
       if (a) setAttendance(a);

@@ -2,15 +2,13 @@
 
 import { useEffect } from "react";
 import { useRouter } from "next/navigation";
+import { getSessionUser } from "@/lib/api";
 
 export default function Home() {
   const router = useRouter();
 
   useEffect(() => {
-    const user = localStorage.getItem("amizone_user");
-    const pass = localStorage.getItem("amizone_pass");
-
-    if (user && pass) {
+    if (getSessionUser()) {
       router.push("/dashboard/schedule");
     } else {
       router.push("/login");

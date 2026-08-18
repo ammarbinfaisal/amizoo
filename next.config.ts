@@ -1,7 +1,9 @@
 import type { NextConfig } from "next";
 import withPWAInit from "@ducanh2912/next-pwa";
 
-const CACHE_VERSION = process.env.NEXT_PUBLIC_CACHE_VERSION ?? "v2";
+// Bumped when the cached URL shape changes so clients do not serve entries
+// keyed against the old cross-origin API.
+const CACHE_VERSION = process.env.NEXT_PUBLIC_CACHE_VERSION ?? "v3";
 const SCHEDULE_CACHE_NAME = `amizone-schedule-cache-${CACHE_VERSION}`;
 const API_CACHE_NAME = `amizone-api-cache-${CACHE_VERSION}`;
 
@@ -18,7 +20,8 @@ const withPWA = withPWAInit({
     runtimeCaching: [
       {
         // Schedule data changes day-to-day; prefer network and only fall back to cache.
-        urlPattern: /^https:\/\/amizone\.fullstacktics\.com\/api\/v1\/class_schedule\/.*/i,
+        // Data now comes from this app's own tRPC router, so the pattern is same-origin.
+        urlPattern: /\/api\/trpc\/amizone\.classSchedule/i,
         handler: "NetworkFirst",
         options: {
           cacheName: SCHEDULE_CACHE_NAME,
@@ -33,7 +36,7 @@ const withPWA = withPWAInit({
         },
       },
       {
-        urlPattern: /^https:\/\/amizone\.fullstacktics\.com\/api\/.*/i,
+        urlPattern: /\/api\/trpc\/amizone\./i,
         handler: "StaleWhileRevalidate",
         options: {
           cacheName: API_CACHE_NAME,

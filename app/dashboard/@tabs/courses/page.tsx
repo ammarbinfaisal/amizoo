@@ -1,7 +1,7 @@
 "use client";
 
 import { useEffect, useState, useCallback, type ReactNode } from "react";
-import { amizoneApi, amizoneCache, getLocalCredentials } from "@/lib/api";
+import { amizoneApi, amizoneCache, getSessionUser } from "@/lib/api";
 import { Courses, SemesterList } from "@/lib/types";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
@@ -25,13 +25,12 @@ export default function CoursesTab() {
   const [error, setError] = useState<string | null>(null);
 
   useIsomorphicLayoutEffect(() => {
-    const credentials = getLocalCredentials();
-    if (!credentials) return;
+    if (!getSessionUser()) return;
 
     const cachedCourses = semesterRef
-      ? amizoneCache.getCoursesBySemester(semesterRef, credentials)
-      : amizoneCache.getCourses(credentials);
-    const cachedSemesters = amizoneCache.getSemesters(credentials);
+      ? amizoneCache.getCoursesBySemester(semesterRef)
+      : amizoneCache.getCourses();
+    const cachedSemesters = amizoneCache.getSemesters();
 
     if (!cachedCourses && !cachedSemesters) return;
 
@@ -46,17 +45,16 @@ export default function CoursesTab() {
   }, [semesterRef]);
 
   const fetchData = useCallback(async (ref: string | null, opts?: { fresh?: boolean }) => {
-    const credentials = getLocalCredentials();
-    if (!credentials) return;
+    if (!getSessionUser()) return;
 
     setLoading(true);
     setError(null);
-    const init = opts?.fresh ? ({ cache: "no-store" } as const) : undefined;
+    const init = opts?.fresh ? { fresh: true } : undefined;
 
     try {
       const [coursesData, semestersData] = await Promise.all([
-        ref ? amizoneApi.getCoursesBySemester(credentials, ref, init) : amizoneApi.getCourses(credentials, init),
-        amizoneApi.getSemesters(credentials, init).catch(() => null),
+        ref ? amizoneApi.getCoursesBySemester(ref, init) : amizoneApi.getCourses(init),
+        amizoneApi.getSemesters(init).catch(() => null),
       ]);
       setCourses(coursesData);
       if (semestersData) setSemesters(semestersData);

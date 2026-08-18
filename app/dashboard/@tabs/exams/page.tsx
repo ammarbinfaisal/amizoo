@@ -1,7 +1,7 @@
 "use client";
 
 import { useEffect, useState, useCallback } from "react";
-import { amizoneApi, amizoneCache, getLocalCredentials } from "@/lib/api";
+import { amizoneApi, amizoneCache, getSessionUser } from "@/lib/api";
 import { CourseRef } from "@/lib/types";
 import { Card, CardContent } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
@@ -25,10 +25,9 @@ export default function ExamsTab() {
   const [error, setError] = useState<string | null>(null);
 
   useIsomorphicLayoutEffect(() => {
-    const credentials = getLocalCredentials();
-    if (!credentials) return;
+    if (!getSessionUser()) return;
 
-    const cachedSchedule = amizoneCache.getExamSchedule(credentials);
+    const cachedSchedule = amizoneCache.getExamSchedule();
     if (!cachedSchedule) return;
 
     setExams((current) => (current.length > 0 ? current : normalizeExamItems(cachedSchedule)));
@@ -36,15 +35,14 @@ export default function ExamsTab() {
   }, []);
 
   const fetchData = useCallback(async (opts?: { fresh?: boolean }) => {
-    const credentials = getLocalCredentials();
-    if (!credentials) return;
+    if (!getSessionUser()) return;
 
     setLoading(true);
     setError(null);
-    const init = opts?.fresh ? ({ cache: "no-store" } as const) : undefined;
+    const init = opts?.fresh ? { fresh: true } : undefined;
 
     try {
-      const data = await amizoneApi.getExamSchedule(credentials, init);
+      const data = await amizoneApi.getExamSchedule(init);
       setExams(normalizeExamItems(data));
     } catch (e) {
       setError(e instanceof Error ? e.message : "Failed to load exams");

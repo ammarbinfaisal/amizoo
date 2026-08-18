@@ -1,7 +1,7 @@
 "use client";
 
 import { useEffect, useState, useCallback } from "react";
-import { amizoneApi, amizoneCache, getLocalCredentials } from "@/lib/api";
+import { amizoneApi, amizoneCache, getSessionUser } from "@/lib/api";
 import { ExamResultRecords, SemesterList } from "@/lib/types";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
@@ -20,13 +20,12 @@ export default function ResultsTab() {
   const [error, setError] = useState<string | null>(null);
 
   useIsomorphicLayoutEffect(() => {
-    const credentials = getLocalCredentials();
-    if (!credentials) return;
+    if (!getSessionUser()) return;
 
     const cachedResults = semesterRef
-      ? amizoneCache.getExamResult(semesterRef, credentials)
-      : amizoneCache.getCurrentExamResult(credentials);
-    const cachedSemesters = amizoneCache.getSemesters(credentials);
+      ? amizoneCache.getExamResult(semesterRef)
+      : amizoneCache.getCurrentExamResult();
+    const cachedSemesters = amizoneCache.getSemesters();
 
     if (!cachedResults && !cachedSemesters) return;
 
@@ -41,17 +40,16 @@ export default function ResultsTab() {
   }, [semesterRef]);
 
   const fetchData = useCallback(async (ref: string | null, opts?: { fresh?: boolean }) => {
-    const credentials = getLocalCredentials();
-    if (!credentials) return;
+    if (!getSessionUser()) return;
 
     setLoading(true);
     setError(null);
-    const init = opts?.fresh ? ({ cache: "no-store" } as const) : undefined;
+    const init = opts?.fresh ? { fresh: true } : undefined;
 
     try {
       const [resData, semData] = await Promise.all([
-        ref ? amizoneApi.getExamResult(credentials, ref, init) : amizoneApi.getCurrentExamResult(credentials, init),
-        amizoneApi.getSemesters(credentials, init).catch(() => null)
+        ref ? amizoneApi.getExamResult(ref, init) : amizoneApi.getCurrentExamResult(init),
+        amizoneApi.getSemesters(init).catch(() => null)
       ]);
       setData(resData);
       if (semData) setSemesters(semData);

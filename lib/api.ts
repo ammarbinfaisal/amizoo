@@ -1,4 +1,9 @@
-import {
+"use client";
+
+import { TRPCClientError } from "@trpc/client";
+
+import { trpc } from "./trpc/client";
+import type {
   AttendanceRecords,
   Courses,
   ExamResultRecords,
@@ -11,42 +16,63 @@ import {
   WifiInfo,
   WifiMacInfo,
 } from "./types";
-import { type, Type } from "arktype";
 
-const rawApiUrl = process.env.NEXT_PUBLIC_AMIZONE_API_URL || "https://api.ami.zoo.fullstacktics.com";
-const API_URL = rawApiUrl.startsWith("http") ? rawApiUrl : `https://${rawApiUrl}`;
-const CACHE_PREFIX = "amizoo:api-cache:v1";
+/**
+ * Client-side data access.
+ *
+ * Every call goes to this app's own tRPC router (`/api/trpc`), which holds the
+ * Amizone credentials server-side and caches upstream responses. The browser no
+ * longer sees the password at all — it only knows *who* is signed in, via the
+ * `amizone_user` cookie.
+ *
+ * The localStorage layer below is purely an offline mirror for the PWA: it
+ * answers reads when the device is offline or the network call fails.
+ */
+
+const CACHE_PREFIX = "amizoo:api-cache:v2";
+const USER_COOKIE = "amizone_user";
 const isBrowser = typeof window !== "undefined";
 
-export interface Credentials {
-  username: string;
-  password: string;
-}
-
-export type AmizoneRequestInit = Omit<RequestInit, "headers"> & { headers?: Record<string, string> };
-
-interface ScheduleFetchOptions {
+export interface FetchOptions {
+  /** Bypass both the server cache and the local mirror. */
   fresh?: boolean;
 }
 
-function normalizeEndpoint(endpoint: string) {
-  const url = new URL(endpoint, API_URL);
-  url.searchParams.delete("refresh");
-  return url.toString();
+/** Cache resource ids — must stay aligned with `server/trpc/routers/amizone.ts`. */
+const resource = {
+  profile: "profile",
+  attendance: "attendance",
+  semesters: "semesters",
+  courses: (ref?: string) => (ref ? `courses:${ref}` : "courses"),
+  classSchedule: (date: string) => `class_schedule:${date}`,
+  examSchedule: "exam_schedule",
+  examResult: (ref?: string) => (ref ? `exam_result:${ref}` : "exam_result"),
+  wifiMac: "wifi_mac",
+  wifiInfo: "wifi_mac_address",
+};
+
+function readCookie(name: string): string | null {
+  if (typeof document === "undefined") return null;
+  const match = document.cookie.match(
+    new RegExp(`(?:^|;\\s*)${name}=([^;]*)`)
+  );
+  return match ? decodeURIComponent(match[1]) : null;
 }
 
-function getCacheKey(creds: Credentials, endpoint: string, method: string) {
-  const normalized = normalizeEndpoint(endpoint);
-  return `${CACHE_PREFIX}:${creds.username}:${method}:${normalized}`;
+/** Username of the signed-in user, or null. Presence implies a session cookie. */
+export function getSessionUser(): string | null {
+  return readCookie(USER_COOKIE);
 }
 
-function getClassScheduleEndpoint(date: string, options?: ScheduleFetchOptions) {
-  const [year, month, day] = date.split("-");
-  let endpoint = `/api/v1/class_schedule/${year}/${month}/${day}`;
-  if (options?.fresh) {
-    endpoint = `${endpoint}?refresh=${encodeURIComponent(String(Date.now()))}`;
-  }
-  return endpoint;
+export function isUnauthorizedError(error: unknown): boolean {
+  return (
+    error instanceof TRPCClientError &&
+    (error.data as { code?: string } | undefined)?.code === "UNAUTHORIZED"
+  );
+}
+
+function cacheKey(user: string, key: string) {
+  return `${CACHE_PREFIX}:${user}:${key}`;
 }
 
 function readCache<T>(key: string): { data: T; timestamp: number } | null {
@@ -71,7 +97,7 @@ function writeCache<T>(key: string, data: T) {
   try {
     localStorage.setItem(key, JSON.stringify({ data, timestamp: Date.now() }));
   } catch {
-    // Ignore quota errors and keep app responsive.
+    // Ignore quota errors and keep the app responsive.
   }
 }
 
@@ -80,185 +106,180 @@ function isNetworkError(error: unknown) {
   if (navigator.onLine === false) return true;
   if (error instanceof TypeError) return true;
   const message = error instanceof Error ? error.message : "";
-  return message.includes("Failed to fetch") || message.includes("NetworkError");
+  return (
+    message.includes("Failed to fetch") || message.includes("NetworkError")
+  );
 }
 
-export function getLocalCredentials(): Credentials | null {
-  if (typeof window === "undefined") return null;
-  const username = localStorage.getItem("amizone_user");
-  const password = localStorage.getItem("amizone_pass");
-  if (!username || !password) return null;
-  return { username, password };
-}
-
-export async function fetchFromAmizone<T>(
-  endpoint: string,
-  credentials?: Credentials,
-  schema?: Type<T>,
-  init?: AmizoneRequestInit
+/** Reads through the local offline mirror, then the network. */
+async function withOfflineCache<T>(
+  key: string,
+  load: () => Promise<T>
 ): Promise<T> {
-  const creds = credentials || getLocalCredentials();
-  if (!creds) {
-    throw new Error("No credentials provided");
-  }
+  const user = getSessionUser();
+  const storageKey = user ? cacheKey(user, key) : null;
 
-  const method = (init?.method || "GET").toUpperCase();
-  const canUseCache = isBrowser && method === "GET";
-  const cacheKey = canUseCache ? getCacheKey(creds, endpoint, method) : null;
-
-  if (canUseCache && navigator.onLine === false) {
-    const cached = cacheKey ? readCache<T>(cacheKey) : null;
-    if (cached) {
-      if (schema) {
-        const result = schema(cached.data);
-        if (result instanceof type.errors) {
-          throw new Error(result.summary);
-        }
-        return result as T;
-      }
-      return cached.data;
-    }
+  if (storageKey && isBrowser && navigator.onLine === false) {
+    const cachedValue = readCache<T>(storageKey);
+    if (cachedValue) return cachedValue.data;
     throw new Error("Offline with no cached data available");
   }
 
-  const auth = btoa(`${creds.username}:${creds.password}`);
-  let response: Response;
   try {
-    response = await fetch(`${API_URL}${endpoint}`, {
-      ...init,
-      headers: {
-        Authorization: `Basic ${auth}`,
-        ...(init?.headers || {}),
-      },
-    });
+    const data = await load();
+    if (storageKey) writeCache(storageKey, data);
+    return data;
   } catch (error) {
-    if (canUseCache && cacheKey && isNetworkError(error)) {
-      const cached = readCache<T>(cacheKey);
-      if (cached) {
-        if (schema) {
-          const result = schema(cached.data);
-          if (result instanceof type.errors) {
-            throw new Error(result.summary);
-          }
-          return result as T;
-        }
-        return cached.data;
-      }
+    if (storageKey && isNetworkError(error)) {
+      const cachedValue = readCache<T>(storageKey);
+      if (cachedValue) return cachedValue.data;
     }
     throw error;
   }
-
-  if (!response.ok) {
-    if (response.status === 401) {
-      throw new Error("Invalid credentials");
-    }
-    const message = await response.text().catch(() => "");
-    throw new Error(message || `API error: ${response.statusText}`);
-  }
-
-  const data = await response.json();
-
-  let parsed = data as T;
-  if (schema) {
-    const result = schema(data);
-    if (result instanceof type.errors) {
-      throw new Error(result.summary);
-    }
-    parsed = result as T;
-  }
-
-  if (canUseCache && cacheKey) {
-    writeCache(cacheKey, parsed);
-  }
-
-  return parsed;
 }
 
-export function getCachedAmizoneData<T>(
-  endpoint: string,
-  credentials?: Credentials,
-  method = "GET"
-): T | null {
-  const creds = credentials || getLocalCredentials();
-  if (!creds) return null;
+function readCached<T>(key: string): T | null {
+  const user = getSessionUser();
+  if (!user) return null;
+  return readCache<T>(cacheKey(user, key))?.data ?? null;
+}
 
-  const cacheKey = getCacheKey(creds, endpoint, method.toUpperCase());
-  return readCache<T>(cacheKey)?.data ?? null;
+export async function login(username: string, password: string) {
+  return trpc.auth.login.mutate({ username, password });
+}
+
+export async function logout() {
+  try {
+    await trpc.auth.logout.mutate();
+  } finally {
+    await clearLocalCache();
+  }
+}
+
+/** Drops the offline mirror. Called on sign-out so a shared device leaks nothing. */
+export async function clearLocalCache() {
+  if (!isBrowser) return;
+
+  try {
+    const doomed: string[] = [];
+    for (let i = 0; i < localStorage.length; i += 1) {
+      const key = localStorage.key(i);
+      if (key?.startsWith(CACHE_PREFIX)) doomed.push(key);
+    }
+    doomed.forEach((key) => localStorage.removeItem(key));
+  } catch {
+    // Nothing to do if storage is unavailable.
+  }
+
+  // The service worker also holds the authenticated tRPC GETs (see
+  // runtimeCaching in next.config.ts); those must go too.
+  try {
+    if ("caches" in window) {
+      const names = await caches.keys();
+      await Promise.all(
+        names
+          .filter((name) => name.startsWith("amizone-"))
+          .map((name) => caches.delete(name))
+      );
+    }
+  } catch {
+    // Cache Storage is unavailable or blocked; nothing further to do.
+  }
 }
 
 export const amizoneApi = {
-  getAttendance: (creds?: Credentials, init?: AmizoneRequestInit) =>
-    fetchFromAmizone<AttendanceRecords>("/api/v1/attendance", creds, undefined, init),
-  getProfile: (creds?: Credentials, init?: AmizoneRequestInit) =>
-    fetchFromAmizone<Profile>("/api/v1/user_profile", creds, undefined, init),
-  getSemesters: (creds?: Credentials, init?: AmizoneRequestInit) =>
-    fetchFromAmizone<SemesterList>("/api/v1/semesters", creds, undefined, init),
-  getCourses: (creds?: Credentials, init?: AmizoneRequestInit) =>
-    fetchFromAmizone<Courses>("/api/v1/courses", creds, undefined, init),
-  getCoursesBySemester: (creds: Credentials | undefined, semesterRef: string, init?: AmizoneRequestInit) =>
-    fetchFromAmizone<Courses>(`/api/v1/courses/${encodeURIComponent(semesterRef)}`, creds, undefined, init),
-  getClassSchedule: (creds: Credentials | undefined, date: string, options?: ScheduleFetchOptions) => {
-    const endpoint = getClassScheduleEndpoint(date, options);
-    return fetchFromAmizone<ScheduledClasses>(endpoint, creds, undefined, options?.fresh ? { cache: "no-store" } : undefined);
-  },
-  // Legacy shape compatibility (some deployments return { macAddress }).
-  getWifiInfo: (creds?: Credentials, init?: AmizoneRequestInit) =>
-    fetchFromAmizone<WifiInfo>("/api/v1/wifi_mac_address", creds, undefined, init),
-  getWifiMacInfo: (creds?: Credentials, init?: AmizoneRequestInit) =>
-    fetchFromAmizone<WifiMacInfo>("/api/v1/wifi_mac", creds, undefined, init),
-  registerWifiMac: (creds: Credentials | undefined, address: string, overrideLimit = false) =>
-    fetchFromAmizone<void>(
-      "/api/v1/wifi_mac",
-      creds,
-      undefined,
-      {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ address, overrideLimit }),
-      }
+  getProfile: (opts?: FetchOptions) =>
+    withOfflineCache<Profile>(
+      resource.profile,
+      () => trpc.amizone.profile.query({ fresh: opts?.fresh })
     ),
-  deregisterWifiMac: (creds: Credentials | undefined, address: string) =>
-    fetchFromAmizone<void>(`/api/v1/wifi_mac/${encodeURIComponent(address)}`, creds, undefined, { method: "DELETE" }),
-  getExamSchedule: (creds?: Credentials, init?: AmizoneRequestInit) =>
-    fetchFromAmizone<ExaminationSchedule>("/api/v1/exam_schedule", creds, undefined, init),
-  getExamResult: (creds: Credentials | undefined, semesterRef: string, init?: AmizoneRequestInit) =>
-    fetchFromAmizone<ExamResultRecords>(`/api/v1/exam_result/${encodeURIComponent(semesterRef)}`, creds, undefined, init),
-  getCurrentExamResult: (creds?: Credentials, init?: AmizoneRequestInit) =>
-    fetchFromAmizone<ExamResultRecords>("/api/v1/exam_result", creds, undefined, init),
-  submitFacultyFeedback: (creds: Credentials | undefined, payload: FillFacultyFeedbackRequest) =>
-    fetchFromAmizone<FillFacultyFeedbackResponse>(
-      "/api/v1/faculty/feedback/submit",
-      creds,
-      undefined,
-      {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify(payload),
-      }
+
+  getAttendance: (opts?: FetchOptions) =>
+    withOfflineCache<AttendanceRecords>(
+      resource.attendance,
+      () => trpc.amizone.attendance.query({ fresh: opts?.fresh })
     ),
+
+  getSemesters: (opts?: FetchOptions) =>
+    withOfflineCache<SemesterList>(
+      resource.semesters,
+      () => trpc.amizone.semesters.query({ fresh: opts?.fresh })
+    ),
+
+  getCourses: (opts?: FetchOptions) =>
+    withOfflineCache<Courses>(
+      resource.courses(),
+      () => trpc.amizone.courses.query({ fresh: opts?.fresh })
+    ),
+
+  getCoursesBySemester: (semesterRef: string, opts?: FetchOptions) =>
+    withOfflineCache<Courses>(
+      resource.courses(semesterRef),
+      () => trpc.amizone.courses.query({ semesterRef, fresh: opts?.fresh })
+    ),
+
+  getClassSchedule: (date: string, opts?: FetchOptions) =>
+    withOfflineCache<ScheduledClasses>(
+      resource.classSchedule(date),
+      () => trpc.amizone.classSchedule.query({ date, fresh: opts?.fresh })
+    ),
+
+  getWifiInfo: (opts?: FetchOptions) =>
+    withOfflineCache<WifiInfo>(
+      resource.wifiInfo,
+      () => trpc.amizone.wifiInfo.query({ fresh: opts?.fresh })
+    ),
+
+  getWifiMacInfo: (opts?: FetchOptions) =>
+    withOfflineCache<WifiMacInfo>(
+      resource.wifiMac,
+      () => trpc.amizone.wifiMac.query({ fresh: opts?.fresh })
+    ),
+
+  getExamSchedule: (opts?: FetchOptions) =>
+    withOfflineCache<ExaminationSchedule>(
+      resource.examSchedule,
+      () => trpc.amizone.examSchedule.query({ fresh: opts?.fresh })
+    ),
+
+  getExamResult: (semesterRef: string, opts?: FetchOptions) =>
+    withOfflineCache<ExamResultRecords>(
+      resource.examResult(semesterRef),
+      () => trpc.amizone.examResult.query({ semesterRef, fresh: opts?.fresh })
+    ),
+
+  getCurrentExamResult: (opts?: FetchOptions) =>
+    withOfflineCache<ExamResultRecords>(
+      resource.examResult(),
+      () => trpc.amizone.examResult.query({ fresh: opts?.fresh })
+    ),
+
+  registerWifiMac: (address: string, overrideLimit = false) =>
+    trpc.amizone.registerWifiMac.mutate({ address, overrideLimit }),
+
+  deregisterWifiMac: (address: string) =>
+    trpc.amizone.deregisterWifiMac.mutate({ address }),
+
+  submitFacultyFeedback: (
+    payload: FillFacultyFeedbackRequest
+  ): Promise<FillFacultyFeedbackResponse> =>
+    trpc.amizone.submitFacultyFeedback.mutate(payload),
 };
 
 export const amizoneCache = {
-  getAttendance: (creds?: Credentials) =>
-    getCachedAmizoneData<AttendanceRecords>("/api/v1/attendance", creds),
-  getProfile: (creds?: Credentials) =>
-    getCachedAmizoneData<Profile>("/api/v1/user_profile", creds),
-  getSemesters: (creds?: Credentials) =>
-    getCachedAmizoneData<SemesterList>("/api/v1/semesters", creds),
-  getCourses: (creds?: Credentials) =>
-    getCachedAmizoneData<Courses>("/api/v1/courses", creds),
-  getCoursesBySemester: (semesterRef: string, creds?: Credentials) =>
-    getCachedAmizoneData<Courses>(`/api/v1/courses/${encodeURIComponent(semesterRef)}`, creds),
-  getClassSchedule: (date: string, creds?: Credentials) =>
-    getCachedAmizoneData<ScheduledClasses>(getClassScheduleEndpoint(date), creds),
-  getWifiInfo: (creds?: Credentials) =>
-    getCachedAmizoneData<WifiInfo>("/api/v1/wifi_mac_address", creds),
-  getWifiMacInfo: (creds?: Credentials) =>
-    getCachedAmizoneData<WifiMacInfo>("/api/v1/wifi_mac", creds),
-  getExamSchedule: (creds?: Credentials) =>
-    getCachedAmizoneData<ExaminationSchedule>("/api/v1/exam_schedule", creds),
-  getExamResult: (semesterRef: string, creds?: Credentials) =>
-    getCachedAmizoneData<ExamResultRecords>(`/api/v1/exam_result/${encodeURIComponent(semesterRef)}`, creds),
-  getCurrentExamResult: (creds?: Credentials) =>
-    getCachedAmizoneData<ExamResultRecords>("/api/v1/exam_result", creds),
+  getProfile: () => readCached<Profile>(resource.profile),
+  getAttendance: () => readCached<AttendanceRecords>(resource.attendance),
+  getSemesters: () => readCached<SemesterList>(resource.semesters),
+  getCourses: () => readCached<Courses>(resource.courses()),
+  getCoursesBySemester: (semesterRef: string) =>
+    readCached<Courses>(resource.courses(semesterRef)),
+  getClassSchedule: (date: string) =>
+    readCached<ScheduledClasses>(resource.classSchedule(date)),
+  getWifiInfo: () => readCached<WifiInfo>(resource.wifiInfo),
+  getWifiMacInfo: () => readCached<WifiMacInfo>(resource.wifiMac),
+  getExamSchedule: () => readCached<ExaminationSchedule>(resource.examSchedule),
+  getExamResult: (semesterRef: string) =>
+    readCached<ExamResultRecords>(resource.examResult(semesterRef)),
+  getCurrentExamResult: () =>
+    readCached<ExamResultRecords>(resource.examResult()),
 };

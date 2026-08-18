@@ -1,7 +1,7 @@
 "use client";
 
 import { useEffect, useState, useCallback, useMemo } from "react";
-import { amizoneApi, getLocalCredentials } from "@/lib/api";
+import { amizoneApi, getSessionUser } from "@/lib/api";
 import { useDashboard } from "@/lib/dashboard-context";
 import { AttendanceRecords, ScheduledClasses } from "@/lib/types";
 import { Schedule } from "@/components/Schedule";
@@ -62,8 +62,7 @@ export default function ScheduleTab() {
 
   const fetchSchedule = useCallback(
     async (d: Date, opts?: { fresh?: boolean }) => {
-      const credentials = getLocalCredentials();
-      if (!credentials) return;
+      if (!getSessionUser()) return;
 
       setLoading(true);
       setError(null);
@@ -73,17 +72,12 @@ export default function ScheduleTab() {
 
       try {
         const schedulePromise =
-          amizoneApi.getClassSchedule(credentials, dateStr, {
-            fresh,
-          });
+          amizoneApi.getClassSchedule(dateStr, { fresh });
 
         const attendancePromise =
           (attendance ?? dashboardAttendance) && !opts?.fresh
             ? Promise.resolve(attendance ?? dashboardAttendance)
-            : amizoneApi.getAttendance(
-                credentials,
-                fresh ? { cache: "no-store" } : undefined
-              );
+            : amizoneApi.getAttendance(fresh ? { fresh: true } : undefined);
 
         const [scheduleResult, attendanceResult] =
           await Promise.allSettled([

@@ -5,6 +5,7 @@ import { useRouter } from "next/navigation";
 import { useForm } from "react-hook-form";
 import { arktypeResolver } from "@hookform/resolvers/arktype";
 import { loginSchema, LoginFormValues } from "@/lib/schemas";
+import { getSessionUser, login } from "@/lib/api";
 import { toast } from "sonner";
 
 import { Button } from "@/components/ui/button";
@@ -32,9 +33,7 @@ export default function LoginPage() {
   });
 
   useEffect(() => {
-    const user = localStorage.getItem("amizone_user");
-    const pass = localStorage.getItem("amizone_pass");
-    if (user && pass) {
+    if (getSessionUser()) {
       router.push("/dashboard");
     }
   }, [router]);
@@ -43,14 +42,17 @@ export default function LoginPage() {
     setLoading(true);
 
     try {
-      // Store credentials in localStorage for client-side API calls
-      localStorage.setItem("amizone_user", values.username);
-      localStorage.setItem("amizone_pass", values.password);
+      // Verified against Amizone server-side; on success the credentials are
+      // sealed into an httpOnly cookie and never touch client storage.
+      await login(values.username, values.password);
 
       toast.success("Login successful");
       router.push("/dashboard");
-    } catch {
-      toast.error("An error occurred during login");
+      router.refresh();
+    } catch (error) {
+      toast.error(
+        error instanceof Error ? error.message : "An error occurred during login"
+      );
     } finally {
       setLoading(false);
     }
