@@ -13,7 +13,8 @@ import {
 } from "./types";
 import { type, Type } from "arktype";
 
-const rawApiUrl = process.env.NEXT_PUBLIC_AMIZONE_API_URL || "https://api.ami.zoo.fullstacktics.com";
+// Strip trailing slashes: "//api/..." gets a 301 from the server, and browsers replay POSTs as GETs on 301.
+const rawApiUrl = (process.env.NEXT_PUBLIC_AMIZONE_API_URL || "https://api.ami.zoo.fullstacktics.com").trim().replace(/\/+$/, "");
 const API_URL = rawApiUrl.startsWith("http") ? rawApiUrl : `https://${rawApiUrl}`;
 const CACHE_PREFIX = "amizoo:api-cache:v1";
 const isBrowser = typeof window !== "undefined";
